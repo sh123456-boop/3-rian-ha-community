@@ -1,11 +1,13 @@
-package com.ktb.community.Entity;
+package com.ktb.community.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +16,9 @@ import java.util.List;
 @Entity
 @Getter
 @Table(name = "users")
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class User extends Timestamped{
 
     @Id
@@ -27,7 +32,6 @@ public class User extends Timestamped{
     private String email;
 
     @NotBlank
-    @Size(min = 8, max = 20) // 비밀번호 길이 제한
     @Column(nullable = false)
     private String password;
 
@@ -35,6 +39,9 @@ public class User extends Timestamped{
     @Size(min = 2, max = 10)
     @Column(nullable = false, unique = true)
     private String nickname;
+
+    @Enumerated(EnumType.STRING)
+    private Role role;
 
     // 유저를 삭제하면 관련 image 삭제, 이미지를 바꾸면 기존 이미지 삭제
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)

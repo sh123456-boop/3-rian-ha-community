@@ -1,4 +1,4 @@
-package com.ktb.community.Entity;
+package com.ktb.community.entity;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.OnDelete;
@@ -7,7 +7,6 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "user_like_posts")

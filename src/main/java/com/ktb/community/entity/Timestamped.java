@@ -1,4 +1,4 @@
-package com.ktb.community.Entity;
+package com.ktb.community.entity;
 
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;
@@ -7,7 +7,6 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 
 @MappedSuperclass // 멤버 변수가 컬럼이 되도록 함
 @EntityListeners(AuditingEntityListener.class) // 변경되었을 때 자동으로 기록
