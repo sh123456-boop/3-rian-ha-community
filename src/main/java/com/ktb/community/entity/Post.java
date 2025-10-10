@@ -73,6 +73,11 @@ public class Post extends Timestamped{
         this.postImageList.add(postImage);
     }
 
+    // post <-> comment
+    public void setCommentList(Comment comment) {
+        this.commentList.add(comment);
+    }
+
     public void addPostImage(PostImage postImage) {
         this.postImageList.add(postImage);
     }

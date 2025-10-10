@@ -12,7 +12,6 @@ import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
-import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
 import java.time.Duration;
@@ -37,30 +36,24 @@ public class S3Service {
      * @return PreSignedUrlResponseDto (내부에 key와 url을 포함하는 DTO)
      */
     // 파일 업로드용 Presigned URL 생성
-    public PreSignedUrlResponseDto getPresignedPutUrl(Long userId, String fileName) {
-        // 1. UUID를 통해 고유한 파일명 생성
-        String uuid = UUID.randomUUID().toString();
-        String uniqueFileName = uuid + "-" + fileName;
+    public PreSignedUrlResponseDto getPostPresignedPutUrl(Long userId, String fileName) {
 
-        // 2. S3에 저장될 전체 경로(s3_key) 설정
-        String s3_key = "posts/" + userId + "/" + uniqueFileName;
+        // 1. S3에 저장될 전체 경로(s3_key) 설정
+        String s3_key = "posts/" + userId + "/" + createUniqueFileName(fileName);
 
-        // 3. pre-signed url 생성에 필요한 요청 객체 생성
-        PutObjectRequest putObjectRequest = PutObjectRequest.builder()
-                .bucket(bucket)
-                .key(s3_key)
-                // .contentType("image/jpeg) // 필요시 Content-Type 지정
-                .build();
+        // 2. presigendUrl 생성
+        String presignedUrl = generatePresignedUrl(s3_key);
+        return new PreSignedUrlResponseDto(s3_key, presignedUrl);
+    }
 
-        PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
-                .signatureDuration(Duration.ofMinutes(10)) // URL 유효 시간
-                .putObjectRequest(putObjectRequest)
-                .build();
+    // 유저 프로필용 Presigned Url 생성
+    public PreSignedUrlResponseDto getProfileImagePresignedUrl(Long userId, String fileName) {
 
-        PresignedPutObjectRequest presignedRequest = s3Presigner.presignPutObject(presignRequest);
+        // S3 키 경로를 프로필 이미지용으로 지정
+        String s3_key = "profiles/" + userId + "/" + createUniqueFileName(fileName);
 
-        // 4. url 생성
-        String presignedUrl = presignedRequest.url().toString();
+        // 2. presigendUrl 생성
+        String presignedUrl = generatePresignedUrl(s3_key);
         return new PreSignedUrlResponseDto(s3_key, presignedUrl);
     }
 
@@ -81,4 +74,25 @@ public class S3Service {
             throw new RuntimeException("\"S3 파일 삭제 실패: \" + s3Key, e");
         }
     }
+
+    // 고유 파일명을 만드는 공통 메서
+    private String createUniqueFileName(String fileName) {
+        return UUID.randomUUID().toString() + "-" + fileName;
+    }
+
+    // 3. 실제 URL 생성 로직을 담당하는 공통 메서드
+    private String generatePresignedUrl(String s3Key) {
+        PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                .bucket(bucket)
+                .key(s3Key)
+                .build();
+
+        PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
+                .signatureDuration(Duration.ofMinutes(10))
+                .putObjectRequest(putObjectRequest)
+                .build();
+
+        return s3Presigner.presignPutObject(presignRequest).url().toString();
+    }
+
 }

@@ -1,5 +1,6 @@
 package com.ktb.community.dto.response;
 
+import com.ktb.community.entity.Post;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -16,6 +17,10 @@ public class PostResponseDto {
     private Instant updatedAt;
     private List<ImageInfo> images; // 이미지 정보 리스트를 내부에 포함
 
+    private int viewCount;
+    private int likeCount;
+    private int commnetCount;
+
 
     // 재사용을 위한 내부 DTO (또는 별도 파일로 분리 가능)
     public static class ImageInfo {
@@ -27,4 +32,18 @@ public class PostResponseDto {
             this.order = order;
         }
     }
+
+    public PostResponseDto(Post post, List<ImageInfo> list) {
+        this.postId = post.getId();
+        this.title = post.getTitle();
+        this.content = post.getContents();
+        this.nickname = post.getUser().getNickname();
+        this.updatedAt = post.getUpdatedAt();
+        this.images = list;
+        this.viewCount = post.getPostCount().getView_cnt();
+        this.likeCount = post.getPostCount().getLikes_cnt();
+        this.commnetCount = post.getPostCount().getCmt_cnt();
+    }
+
+
 }

@@ -25,6 +25,9 @@ repositories {
 }
 
 dependencies {
+    // swagger 관련
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8'
+
     // aws 관련
     implementation platform('software.amazon.awssdk:bom:2.25.46')
     implementation 'software.amazon.awssdk:s3'

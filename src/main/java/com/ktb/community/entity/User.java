@@ -54,4 +54,16 @@ public class User extends Timestamped{
     // 한 명의 유저는 여러 '좋아요'를 누를 수 있음 (OneToMany)
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserLikePosts> likesList = new ArrayList<>();
+
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public void updatePassword(String newEncodedPassword) {
+        this.password = newEncodedPassword;
+    }
+
+    public void updateProfileImage(Image image) {
+        this.image = image;
+    }
 }

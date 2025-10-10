@@ -2,15 +2,18 @@ package com.ktb.community.service;
 
 import com.ktb.community.dto.request.PostCreateRequestDto;
 import com.ktb.community.dto.response.PostResponseDto;
-import com.ktb.community.entity.Image;
-import com.ktb.community.entity.Post;
-import com.ktb.community.entity.PostImage;
-import com.ktb.community.entity.User;
+import com.ktb.community.dto.response.PostSliceResponseDto;
+import com.ktb.community.dto.response.PostSummaryDto;
+import com.ktb.community.entity.*;
 import com.ktb.community.repository.ImageRepository;
 import com.ktb.community.repository.PostRepository;
+import com.ktb.community.repository.UserLikePostsRepository;
 import com.ktb.community.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,10 +32,14 @@ public class PostService {
     private final UserRepository userRepository;
     private final S3Service s3Service;
     private final ImageRepository imageRepository;
+    private final UserLikePostsRepository userLikePostsRepository; // 좋아요 레포지토리 주입
+    private static final int PAGE_SIZE = 10; // 한 페이지에 보여줄 게시물 수
+
 
 
     @Value("${aws.cloud_front.domain}")
     private String cloudfrontDomain;
+
     // 게시글 작성
     public Long createPost(PostCreateRequestDto dto, Long userId) {
 
@@ -74,7 +81,11 @@ public class PostService {
 
     // 게시글 단건 조회(상세 페이지)
     public PostResponseDto getPost(Long postId) {
-        Post post = postRepository.findById(postId).orElseThrow();
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 게시물을 찾을 수 없습니다."));
+
+        // 조회수 증가 로직 호출
+        increaseViewCount(post);
 
         // 1. 엔티티의 이미지 목록을 dto로 변환
         List<PostResponseDto.ImageInfo> imageInfos = post.getPostImageList().stream()
@@ -87,17 +98,24 @@ public class PostService {
                 .collect(Collectors.toList());
 
         // 3. 최종 응답 dto 반환
-        return new PostResponseDto(
-                post.getId(),
-                post.getTitle(),
-                post.getContents(),
-                post.getUser().getNickname(),
-                post.getUpdatedAt(),
-                imageInfos
-        );
+        return new PostResponseDto(post, imageInfos);
     }
 
     // 게시글 전체 조회(인피니티 스크롤)
+    @Transactional(readOnly = true)
+    public PostSliceResponseDto getPostSlice(Long lastPostId) {
+        Pageable pageable = PageRequest.of(0, PAGE_SIZE);
+
+        Slice<Post> postSlice = (lastPostId == null)
+                ? postRepository.findByOrderByIdDesc(pageable)
+                : postRepository.findByIdLessThanOrderByIdDesc(lastPostId, pageable);
+
+        List<PostSummaryDto> posts = postSlice.getContent().stream()
+                .map(PostSummaryDto::new)
+                .collect(Collectors.toList());
+
+        return new PostSliceResponseDto(posts, postSlice.hasNext());
+    }
 
     // 게시글 수정
     public void updatePost(Long postId, PostCreateRequestDto requestDto, Long userId) {
@@ -151,6 +169,7 @@ public class PostService {
         }
 
         // 4. 게시물 삭제
+        post.getUser().getPostList().remove(post);
         // post 엔티티의 cascade 설정으로 인해 연관된 postImage, Comment, PostCount가 함께 삭제
         postRepository.delete(post);
     }
@@ -179,4 +198,52 @@ public class PostService {
             s3Service.deleteFile(keyToDelete);
         }
     }
+
+    // 게시글 좋아요 추가 메서드
+    public void likePost(Long postId, Long userId) {
+        // 1. 게시물과 사용자 정보를 조회합니다.
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 게시물을 찾을 수 없습니다."));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        // 2. 이미 해당 게시물에 좋아요를 눌렀는지 확인합니다.
+        if (userLikePostsRepository.existsByUserAndPost(user, post)) {
+            throw new IllegalArgumentException("이미 좋아요를 누른 게시물입니다.");
+        }
+
+        // 3. 좋아요 기록을 생성하고 저장합니다 (UserLikePosts).
+        UserLikePosts userLikePosts = new UserLikePosts(user, post);
+        userLikePostsRepository.save(userLikePosts);
+
+        // 4. 게시물의 좋아요 수를 1 증가시킵니다 (PostCount).
+        post.getPostCount().increaseLikesCount();
+    }
+
+    // 게시글 좋아요 취소 메서드
+    public void unlikePost(Long postId, Long userId) {
+        // 1. 게시물과 사용자 정보를 조회합니다.
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 게시물을 찾을 수 없습니다."));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        // 2. 사용자가 해당 게시물에 좋아요를 누른 기록을 조회합니다.
+        UserLikePosts userLikePosts = userLikePostsRepository.findByUserAndPost(user, post)
+                .orElseThrow(() -> new IllegalArgumentException("좋아요를 누른 기록이 없습니다."));
+
+        // 3. 좋아요 기록을 삭제합니다 (UserLikePosts).
+        userLikePostsRepository.delete(userLikePosts);
+
+        // 4. 게시물의 좋아요 수를 1 감소시킵니다 (PostCount).
+        post.getPostCount().decreaseLikesCount();
+    }
+
+    // 조회수 + 1
+    private void increaseViewCount(Post post) {
+        PostCount postCount = post.getPostCount();
+        postCount.increaseViewCount();
+    }
+
+
 }
