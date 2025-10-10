@@ -7,7 +7,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create   # 개발 중에는 create / create-drop / update 중 선택
+      ddl-auto: validate   # 개발 중에는 create / create-drop / update 중 선택
     properties:
       hibernate:
         jdbc:
@@ -24,3 +24,6 @@ aws:
   secret_key:
   bucket:
   cloud_front:
+
+jwt:
+  secret: vmfhaltmskdlstkfkdgodyroqkfwkdbalroqkfwkdbalaaaaaaaaaaaaaaaabbbbb

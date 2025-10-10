@@ -7,7 +7,8 @@ import jakarta.persistence.*;
 public class Comment extends Timestamped{
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "comment_id")
     private Long id;
 
     @Column(nullable = false)

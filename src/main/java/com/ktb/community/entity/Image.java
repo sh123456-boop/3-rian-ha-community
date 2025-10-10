@@ -5,10 +5,10 @@ import jakarta.validation.constraints.NotBlank;
 
 @Entity
 @Table(name = "images")
-public class Image extends Timestamped {
+public class Image  {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "image_id")
     private Long id;
 

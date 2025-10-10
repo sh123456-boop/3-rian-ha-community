@@ -22,7 +22,7 @@ import java.util.List;
 public class User extends Timestamped{
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
     private Long id;
 

@@ -5,7 +5,7 @@ import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 
 @Entity
-@Table(name = "post_counts")
+@Table(name = "counts")
 public class PostCount {
 
     @Id // 기본 키로 지정
