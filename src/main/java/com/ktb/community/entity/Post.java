@@ -3,12 +3,19 @@ package com.ktb.community.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "posts")
+@AllArgsConstructor
+@Builder
+@Getter
 public class Post extends Timestamped{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -46,4 +53,28 @@ public class Post extends Timestamped{
         this.postCount = new PostCount();
         this.postCount.setPost(this); // 양방향 연관관계 설정
     }
+
+    // update 메서드
+    public void update(String title, String content) {
+        this.title = title;
+        this.contents = content;
+    }
+
+    // +++++++++++++++++++++ 연관관계 메서드 +++++++++++++++++++++ //
+
+    // post <-> user
+    public void setUser(User user) {
+        this.user = user;
+        user.getPostList().add(this);
+    }
+
+    // post <-> postImage
+    public void setPostImageList(PostImage postImage) {
+        this.postImageList.add(postImage);
+    }
+
+    public void addPostImage(PostImage postImage) {
+        this.postImageList.add(postImage);
+    }
+
 }

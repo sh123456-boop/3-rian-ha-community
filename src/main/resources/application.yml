@@ -19,11 +19,12 @@ logging:
     org.hibernate.SQL: debug
 
 aws:
-  region:
+  region: ap-northeast-2
   access_key:
   secret_key:
   bucket:
   cloud_front:
+    domain:
 
 jwt:
   secret: vmfhaltmskdlstkfkdgodyroqkfwkdbalroqkfwkdbalaaaaaaaaaaaaaaaabbbbb

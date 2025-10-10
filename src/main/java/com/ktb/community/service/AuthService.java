@@ -34,7 +34,12 @@ public class AuthService {
     public void join(JoinRequestDto dto) {
         String email = dto.getEmail();
         String password = dto.getPassword();
+        String rePassword = dto.getRePassword();
         String nickname = dto.getNickname();
+
+        if(!password.equals(rePassword)) {
+            throw new RuntimeException("비밀번호가 다릅니다");
+        }
 
         boolean isExistEmail = userRepository.existsByEmail(email);
         boolean isExistNickname = userRepository.existsByNickname(nickname);
