@@ -15,7 +15,8 @@ public class PostResponseDto {
     private String content;
     private String nickname;
     private Instant updatedAt;
-    private List<ImageInfo> images; // 이미지 정보 리스트를 내부에 포함
+    private List<ImageInfo> images;// 이미지 정보 리스트를 내부에 포함
+    private String authorProfileImageUrl;
 
     private int viewCount;
     private int likeCount;
@@ -23,6 +24,7 @@ public class PostResponseDto {
 
 
     // 재사용을 위한 내부 DTO (또는 별도 파일로 분리 가능)
+    @Getter
     public static class ImageInfo {
         private String imageUrl; // 최종 CloudFront URL
         private int order;
@@ -33,7 +35,7 @@ public class PostResponseDto {
         }
     }
 
-    public PostResponseDto(Post post, List<ImageInfo> list) {
+    public PostResponseDto(Post post, List<ImageInfo> list, String authorProfileImageUrl) {
         this.postId = post.getId();
         this.title = post.getTitle();
         this.content = post.getContents();
@@ -43,6 +45,7 @@ public class PostResponseDto {
         this.viewCount = post.getPostCount().getView_cnt();
         this.likeCount = post.getPostCount().getLikes_cnt();
         this.commnetCount = post.getPostCount().getCmt_cnt();
+        this.authorProfileImageUrl = authorProfileImageUrl;
     }
 
 

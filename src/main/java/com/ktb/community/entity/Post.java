@@ -16,6 +16,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @Getter
+@NoArgsConstructor
 public class Post extends Timestamped{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,20 +39,25 @@ public class Post extends Timestamped{
     private User user;
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<Comment> commentList = new ArrayList<>();
 
     // 게시글에 포함된 이미지 목록
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("orders ASC") // 이미지 순서(orders)에 따라 오름차순으로 정렬
+    @Builder.Default
     private List<PostImage> postImageList = new ArrayList<>();
 
     @OneToOne(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
-    private PostCount postCount;
+    @Builder.Default
+    private PostCount postCount = new PostCount();
 
     // Post 생성자에 PostCount 초기화 로직 추가
-    public Post() {
-        this.postCount = new PostCount();
-        this.postCount.setPost(this); // 양방향 연관관계 설정
+    @PrePersist
+    public void prePersist() {
+        if (this.postCount != null) {
+            this.postCount.setPost(this); // 👈 가장 중요한 부분!
+        }
     }
 
     // update 메서드

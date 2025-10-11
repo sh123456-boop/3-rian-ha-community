@@ -40,6 +40,9 @@ public class PostService {
     @Value("${aws.cloud_front.domain}")
     private String cloudfrontDomain;
 
+    @Value("${aws.cloud_front.default-profile-image-key}")
+    private String defaultProfileImageKey;
+
     // 게시글 작성
     public Long createPost(PostCreateRequestDto dto, Long userId) {
 
@@ -59,8 +62,8 @@ public class PostService {
             for (PostCreateRequestDto.ImageInfo imageInfo : dto.getImages()) {
                 // 3-1. Image 엔티티 생성
                 Image image = Image.builder()
-                        .s3_key(imageInfo.getS3_key())
-                        .user(user)
+                        .s3Key(imageInfo.getS3_key())
+                        .user(null)
                         .build();
 
                 // 3-2. PostImage 엔티티(매핑 테이블) 생성
@@ -87,18 +90,32 @@ public class PostService {
         // 조회수 증가 로직 호출
         increaseViewCount(post);
 
+        // 작성자의 프로필 이미지 URL을 생성
+        String authorProfileImageUrl;
+        User author = post.getUser();
+
+        if (author != null && author.getImage() != null) {
+            // 유저의 프로필 이미지가 있으면 -> 해당 이미지의 URL 생성
+            String s3Key = author.getImage().getS3Key();
+            authorProfileImageUrl = "https://" + cloudfrontDomain + "/" + s3Key;
+        } else {
+            // 유저의 프로필 이미지가 없으면 -> 설정해둔 기본 이미지 URL 사용
+            authorProfileImageUrl = "https://" + cloudfrontDomain + "/" + defaultProfileImageKey;
+        }
+
+
         // 1. 엔티티의 이미지 목록을 dto로 변환
         List<PostResponseDto.ImageInfo> imageInfos = post.getPostImageList().stream()
                 .map(postImage -> {
                     Image image = postImage.getImage();
                     // 2. S3 Key에 CloudFront 도메인을 붙여 완전한 URL 생성
-                    String imageUrl = cloudfrontDomain + "/" + image.getS3_key();
+                    String imageUrl = cloudfrontDomain + "/" + image.getS3Key();
                     return new PostResponseDto.ImageInfo(imageUrl, postImage.getOrders());
                 })
                 .collect(Collectors.toList());
 
         // 3. 최종 응답 dto 반환
-        return new PostResponseDto(post, imageInfos);
+        return new PostResponseDto(post, imageInfos, authorProfileImageUrl);
     }
 
     // 게시글 전체 조회(인피니티 스크롤)
@@ -106,12 +123,24 @@ public class PostService {
     public PostSliceResponseDto getPostSlice(Long lastPostId) {
         Pageable pageable = PageRequest.of(0, PAGE_SIZE);
 
+        // 1. Fetch Join이 적용된 새로운 Repository 메서드를 호출
         Slice<Post> postSlice = (lastPostId == null)
-                ? postRepository.findByOrderByIdDesc(pageable)
-                : postRepository.findByIdLessThanOrderByIdDesc(lastPostId, pageable);
+                ? postRepository.findSliceByOrderByIdDesc(pageable)
+                : postRepository.findSliceByIdLessThanOrderByIdDesc(lastPostId, pageable);
 
+
+        // 2. 스트림 내에서 DTO를 변환하며 프로필 이미지 URL을 생성
         List<PostSummaryDto> posts = postSlice.getContent().stream()
-                .map(PostSummaryDto::new)
+                .map(post -> {
+                    String profileImageUrl = null;
+                    // Fetch Join으로 데이터를 모두 가져왔으므로 추가 쿼리가 발생하지 않습니다.
+                    if (post.getUser() != null && post.getUser().getImage() != null) {
+                        profileImageUrl = "https://" + cloudfrontDomain + "/" + post.getUser().getImage().getS3Key();
+                    } else {
+                        profileImageUrl = "https://" + cloudfrontDomain + "/" + defaultProfileImageKey;
+                    }
+                    return new PostSummaryDto(post, profileImageUrl);
+                })
                 .collect(Collectors.toList());
 
         return new PostSliceResponseDto(posts, postSlice.hasNext());
@@ -141,7 +170,7 @@ public class PostService {
             for (PostCreateRequestDto.ImageInfo imageInfo : requestDto.getImages()) {
                 // s3_key로 Image 엔티티를 찾거나, 없다면 새로 생성 (
                 Image image = imageRepository.findByS3Key(imageInfo.getS3_key())
-                        .orElseGet(() -> imageRepository.save(new Image(imageInfo.getS3_key(), post.getUser())));
+                        .orElseGet(() -> imageRepository.save(new Image(imageInfo.getS3_key(), null)));
 
                 PostImage postImage = new PostImage(post, image, imageInfo.getOrder());
                 post.addPostImage(postImage); // Post 엔티티에 연관관계 편의 메서드 추천
@@ -164,7 +193,7 @@ public class PostService {
         // 3. s3에서 이미지 삭제
         if (post.getPostImageList() != null && !post.getPostImageList().isEmpty()) {
             for (PostImage postImage : post.getPostImageList()) {
-                s3Service.deleteFile(postImage.getImage().getS3_key());
+                s3Service.deleteFile(postImage.getImage().getS3Key());
             }
         }
 
@@ -179,7 +208,7 @@ public class PostService {
     private void deleteS3Image(PostCreateRequestDto requestDto, Post post) {
         // 1. 기존에 저장되어 있던 이미지의 S3 Key 목록을 추출합니다.
         Set<String> existingImageKeys = post.getPostImageList().stream()
-                .map(postImage -> postImage.getImage().getS3_key())
+                .map(postImage -> postImage.getImage().getS3Key())
                 .collect(Collectors.toSet());
 
         // 2. 요청 DTO에 포함된 새로운 이미지의 S3 Key 목록을 추출합니다.

@@ -2,6 +2,7 @@ package com.ktb.community.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.springframework.data.annotation.CreatedDate;
@@ -14,6 +15,7 @@ import java.time.Instant;
 @Table(name = "user_like_posts")
 @IdClass(UserLikePostsId.class) // ID 클래스 지정
 @EntityListeners(AuditingEntityListener.class) // CreatedDate 활성화
+@NoArgsConstructor
 public class UserLikePosts {
 
     @Id // 복합 키 1
@@ -28,8 +30,8 @@ public class UserLikePosts {
     private Post post;
 
     @CreatedDate
-    @Column(nullable = false)
-    private Instant liked_at;
+    @Column(name = "liked_at", nullable = false)
+    private Instant likedAt;
 
     public UserLikePosts(User user, Post post) {
         this.user = user;

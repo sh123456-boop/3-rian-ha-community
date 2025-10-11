@@ -1,12 +1,15 @@
 package com.ktb.community.controller;
 
-import com.ktb.community.dto.request.NicknameRequestDto;
-import com.ktb.community.dto.request.PasswordRequestDto;
-import com.ktb.community.dto.request.ProfileImageRequestDto;
-import com.ktb.community.dto.request.UserDeleteRequestDto;
+import com.ktb.community.dto.request.*;
 import com.ktb.community.dto.response.LikedPostsResponseDto;
+import com.ktb.community.dto.response.PreSignedUrlResponseDto;
 import com.ktb.community.service.CustomUserDetails;
 import com.ktb.community.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +24,25 @@ public class UserController {
     private final UserService userService;
 
     // 닉네임 수정
+    @Operation(
+            summary = "닉네임 변경",
+            description = "현재 로그인된 사용자의 닉네임을 변경하는 로직. 요청 헤더에 Access Token이 반드시 필요합니다.",
+            security = { @SecurityRequirement(name = "accessTokenAuth") },
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "변경할 닉네임을 담은 JSON Body 데이터",
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = NicknameRequestDto.class)
+                    )
+            ),
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "닉네임 변경 성공"
+                    )
+            }
+    )
     @PutMapping("/v1/users/me/nickname")
     public ResponseEntity<Void> updateNickname(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -33,6 +55,25 @@ public class UserController {
     }
 
     // 비밀번호 수정
+    @Operation(
+            summary = "비밀번호 변경",
+            description = "현재 로그인된 사용자의 비밀번호를 변경하는 로직. 요청 헤더에 Access Token이 반드시 필요합니다.",
+            security = { @SecurityRequirement(name = "accessTokenAuth") },
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "변경할 비밀번호를 담은 JSON Body 데이터",
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = PasswordRequestDto.class)
+                    )
+            ),
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "비밀번호 변경 성공"
+                    )
+            }
+    )
     @PutMapping("/v1/users/me/password")
     public ResponseEntity<Void> updatePassword(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -57,6 +98,25 @@ public class UserController {
     }
 
     // 유저 프로필 이미지 추가
+    @Operation(
+            summary = "유저 프로필 이미지 생성",
+            description = "s3에 이미지를 올릴 수 있습니다. 요청 헤더에 Access Token이 반드시 필요합니다.",
+            security = { @SecurityRequirement(name = "accessTokenAuth") },
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "s3_key를 담은 JSON Body 데이터",
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ProfileImageRequestDto.class)
+                    )
+            ),
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "유저 프로필 이미지 생성 성공"
+                    )
+            }
+    )
     @PostMapping("/v1/users/me/image")
     public ResponseEntity<Void> updateProfileImage(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -69,6 +129,17 @@ public class UserController {
     }
 
     // 유저 프로필 이미지 삭제
+    @Operation(
+            summary = "유저 프로필 이미지 삭제",
+            description = "s3에서 이미지를 삭제합니다. 요청 헤더에 Access Token이 반드시 필요합니다.",
+            security = { @SecurityRequirement(name = "accessTokenAuth") },
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "유저 프로필 이미지 삭제 성공"
+                    )
+            }
+    )
     @DeleteMapping("/v1/users/me/image")
     public ResponseEntity<Void> deleteProfileImage(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -80,6 +151,26 @@ public class UserController {
     }
 
     // 좋아요 게시물 id 반환
+    @Operation(
+            summary = "내가 '좋아요' 누른 게시글 목록 조회",
+            description = "현재 로그인된 사용자가 '좋아요'를 누른 모든 게시글의 ID 목록을 조회합니다. 요청 헤더에 Access Token이 반드시 필요합니다.",
+            security = { @SecurityRequirement(name = "accessTokenAuth") },
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "좋아요 누른 게시글 목록 조회 성공",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = LikedPostsResponseDto.class)
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "인증 실패: 유효하지 않은 Access Token",
+                            content = @Content
+                    )
+            }
+    )
     @GetMapping("/v1/users/me/liked-posts")
     public ResponseEntity<LikedPostsResponseDto> getMyLikedPosts(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -89,4 +180,7 @@ public class UserController {
 
         return ResponseEntity.ok(responseDto);
     }
+
+    // 유저 이미지 반환
+
 }

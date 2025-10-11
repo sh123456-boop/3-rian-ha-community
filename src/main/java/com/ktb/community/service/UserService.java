@@ -90,7 +90,7 @@ public class UserService {
         Image oldImage = user.getImage();
         if (oldImage != null) {
             // 3. 있었다면 기존 이미지를 S3 버킷에서 삭제합니다.
-            s3Service.deleteFile(oldImage.getS3_key());
+            s3Service.deleteFile(oldImage.getS3Key());
         }
 
         // 4. 새로운 Image 엔티티를 생성하고 사용자 정보(user)를 넣어줍니다.
@@ -113,7 +113,7 @@ public class UserService {
         // 3. 프로필 이미지가 존재할 경우에만 삭제 로직을 실행
         if (profileImage != null) {
             // 3-1. S3 버킷에서 실제 이미지 파일을 삭제
-            s3Service.deleteFile(profileImage.getS3_key());
+            s3Service.deleteFile(profileImage.getS3Key());
 
             // 3-2. User 엔티티와 Image 엔티티의 연관관계를 끊음
             user.updateProfileImage(null);
@@ -141,6 +141,8 @@ public class UserService {
 
         return new LikedPostsResponseDto(postIds);
     }
+
+
 
 
 

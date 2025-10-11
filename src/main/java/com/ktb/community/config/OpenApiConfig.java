@@ -19,8 +19,8 @@ public class OpenApiConfig {
 
         return new OpenAPI()
                 .info(new Info()
-                        .title("개발자 유미 API 목록")
-                        .description("개발자 유미 스프링 부트 Swagger 시리즈 실습을 위한 API 목록입니다.")
+                        .title("커뮤니티 API 목록")
+                        .description("rian의 커뮤니티 실습을 위한 API 목록입니다.")
                         .version("v1.0.0")
                 )
                 .servers(List.of(
@@ -29,12 +29,10 @@ public class OpenApiConfig {
                                 .description("개발용 서버")
                 ))
                 .components(new Components()
-                        .addSecuritySchemes("JWT", new SecurityScheme()
-                                .type(SecurityScheme.Type.HTTP)
-                                .scheme("bearer")
-                                .bearerFormat("JWT")
-                                .in(SecurityScheme.In.HEADER)
-                                .name("Authorization")
+                        .addSecuritySchemes("accessTokenAuth", new SecurityScheme()
+                                .type(SecurityScheme.Type.APIKEY) // 1. 타입을 APIKEY로 변경
+                                .in(SecurityScheme.In.HEADER)    // 2. 위치는 HEADER로 유지
+                                .name("access")                  // 3. 헤더의 실제 이름(Key)을 'access'로 지정
                         )
                 );
     }

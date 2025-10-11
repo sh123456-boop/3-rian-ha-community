@@ -10,6 +10,7 @@ import com.ktb.community.repository.CommentRepository;
 import com.ktb.community.repository.PostRepository;
 import com.ktb.community.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -30,6 +31,11 @@ public class CommentService {
     private final UserRepository userRepository;
     private static final int PAGE_SIZE = 20; // 한 번에 불러올 댓글 수
 
+    @Value("${aws.cloud_front.domain}")
+    private String cloudfrontDomain;
+
+    @Value("${aws.cloud_front.default-profile-image-key}")
+    private String defaultProfileImageKey;
 
     // 댓글 작성
     public void createComment(Long postId, Long userId, CommentRequestDto dto) {
@@ -51,12 +57,29 @@ public class CommentService {
     public CommentSliceResponseDto getCommentsByCursor(Long postId, Long lastCommentId) {
         Pageable pageable = PageRequest.of(0, PAGE_SIZE);
 
+        // 1. Fetch Join이 적용된 새로운 Repository 메서드를 호출합니다.
         Slice<Comment> commentSlice = (lastCommentId == null)
-                ? commentRepository.findByPostIdOrderByIdDesc(postId, pageable)
-                : commentRepository.findByPostIdAndIdLessThanOrderByIdDesc(postId, lastCommentId, pageable);
+                ? commentRepository.findSliceByPostIdOrderByIdDesc(postId, pageable)
+                : commentRepository.findSliceByPostIdAndIdLessThanOrderByIdDesc(postId, lastCommentId, pageable);
 
+        // 2. 스트림 내에서 DTO를 변환하며 프로필 이미지 URL을 생성합니다.
         List<CommentResponseDto> comments = commentSlice.getContent().stream()
-                .map(CommentResponseDto::new)
+                .map(comment -> {
+                    String profileImageUrl;
+                    User author = comment.getUser();
+
+                    if (author != null && author.getImage() != null) {
+                        // 유저의 프로필 이미지가 있으면 -> 해당 이미지의 URL 생성
+                        String s3Key = author.getImage().getS3Key();
+                        profileImageUrl = "https://" + cloudfrontDomain + "/" + s3Key;
+                    } else {
+                        // 유저의 프로필 이미지가 없으면 -> 설정해둔 기본 이미지 URL 사용
+                        profileImageUrl = "https://" + cloudfrontDomain + "/" + defaultProfileImageKey;
+                    }
+
+                    // 수정된 생성자를 사용하여 DTO 생성
+                    return new CommentResponseDto(comment, profileImageUrl);
+                })
                 .collect(Collectors.toList());
 
         return new CommentSliceResponseDto(comments, commentSlice.hasNext());

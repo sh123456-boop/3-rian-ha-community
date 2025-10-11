@@ -19,12 +19,13 @@ logging:
     org.hibernate.SQL: debug
 
 aws:
-  region: ap-northeast-2
+  region:
   access_key:
   secret_key:
   bucket:
   cloud_front:
     domain:
+    default-profile-image-key: "default-profile.png" # s3에 올려둔 기본 이미지 경로
 
 jwt:
   secret: vmfhaltmskdlstkfkdgodyroqkfwkdbalroqkfwkdbalaaaaaaaaaaaaaaaabbbbb

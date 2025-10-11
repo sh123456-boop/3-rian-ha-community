@@ -44,15 +44,17 @@ public class User extends Timestamped{
     private Role role;
 
     // 유저를 삭제하면 관련 image 삭제, 이미지를 바꾸면 기존 이미지 삭제
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Image image;
 
     // Post와의 일대다 관계 설정
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
     private List<Post> postList = new ArrayList<>();
 
     // 한 명의 유저는 여러 '좋아요'를 누를 수 있음 (OneToMany)
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
     private List<UserLikePosts> likesList = new ArrayList<>();
 
     public void updateNickname(String nickname) {

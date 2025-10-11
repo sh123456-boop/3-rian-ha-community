@@ -21,15 +21,15 @@ public class Image  {
     private Long id;
 
     @NotBlank
-    @Column(nullable = false, unique = true)
-    private String s3_key;
+    @Column(name = "s3_key", nullable = false, unique = true)
+    private String s3Key;
 
     @OneToOne
     @JoinColumn(name = "user_id")
     private User user;
 
-    public Image(String s3_key, User user) {
-        this.s3_key = s3_key;
+    public Image(String s3Key, User user) {
+        this.s3Key = s3Key;
         this.user = user;
     }
 }

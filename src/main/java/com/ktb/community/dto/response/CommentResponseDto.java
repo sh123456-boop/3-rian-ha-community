@@ -12,12 +12,14 @@ public class CommentResponseDto {
     private String contents;
     private String authorNickname;
     private Instant createdAt;
+    private String authorProfileImageUrl;
 
     // Comment 엔티티를 인자로 받는 생성자 (이 부분을 추가!)
-    public CommentResponseDto(Comment comment) {
+    public CommentResponseDto(Comment comment, String authorProfileImageUrl) {
         this.id = comment.getId();
         this.contents = comment.getContents();
         this.authorNickname = comment.getUser().getNickname();
         this.createdAt = comment.getCreatedAt();
+        this.authorProfileImageUrl = authorProfileImageUrl;
     }
 }
