@@ -3,6 +3,7 @@ package com.ktb.community.controller;
 import com.ktb.community.dto.request.*;
 import com.ktb.community.dto.response.LikedPostsResponseDto;
 import com.ktb.community.dto.response.PreSignedUrlResponseDto;
+import com.ktb.community.dto.response.UserInfoResponseDto;
 import com.ktb.community.service.CustomUserDetails;
 import com.ktb.community.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -86,6 +87,23 @@ public class UserController {
     }
 
     // 회원 탈퇴
+    @Operation(
+            summary = "회원 탈퇴",
+            description = "현재 로그인된 사용자의 계정을 탈퇴 처리합니다. 계정 소유자 확인을 위해 반드시 현재 비밀번호를 요청 본문에 포함해야 합니다.",
+            security = { @SecurityRequirement(name = "accessTokenAuth") },
+            responses = {
+                    @ApiResponse(
+                            responseCode = "204",
+                            description = "회원 탈퇴 성공",
+                            content = @Content
+                    ),
+                    @ApiResponse(
+                            responseCode = "400",
+                            description = "비밀번호 불일치: 요청 본문에 전달된 비밀번호가 실제 사용자의 비밀번호와 다릅니다.",
+                            content = @Content
+                    )
+            }
+    )
     @DeleteMapping("/v1/users/me")
     public ResponseEntity<Void> deleteUser(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -181,6 +199,27 @@ public class UserController {
         return ResponseEntity.ok(responseDto);
     }
 
-    // 유저 이미지 반환
+    // 사용자 닉네임, 프로필 이미지 수정 페이지
+    @Operation(
+            summary = "내 정보 조회",
+            description = "현재 로그인된 사용자의 정보(닉네임, 프로필 이미지 URL)를 조회합니다. 요청 헤더에 Access Token이 반드시 필요합니다.",
+            security = { @SecurityRequirement(name = "accessTokenAuth") },
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "사용자 정보 조회 성공",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = UserInfoResponseDto.class)
+                            )
+                    )
+            }
+    )
+    @GetMapping("/v1/users/me")
+    public ResponseEntity<UserInfoResponseDto> getUserInfo(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long userId = userDetails.getUserId();
+        UserInfoResponseDto userInfo = userService.getUserInfo(userId);
+        return ResponseEntity.ok(userInfo);
+    }
 
 }

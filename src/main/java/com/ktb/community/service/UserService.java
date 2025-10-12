@@ -2,12 +2,14 @@ package com.ktb.community.service;
 
 import com.ktb.community.dto.request.PasswordRequestDto;
 import com.ktb.community.dto.response.LikedPostsResponseDto;
+import com.ktb.community.dto.response.UserInfoResponseDto;
 import com.ktb.community.entity.Image;
 import com.ktb.community.entity.User;
 import com.ktb.community.entity.UserLikePosts;
 import com.ktb.community.repository.UserLikePostsRepository;
 import com.ktb.community.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,7 +26,11 @@ public class UserService {
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final S3Service s3Service;
     private final UserLikePostsRepository userLikePostsRepository; // 리포지토리 주입
+    @Value("${aws.cloud_front.domain}")
+    private String cloudfrontDomain;
 
+    @Value("${aws.cloud_front.default-profile-image-key}")
+    private String defaultProfileImageKey;
 
     // 회원 닉네임 수정
     public void updateNickname(String nickname, Long userId) {
@@ -142,7 +148,24 @@ public class UserService {
         return new LikedPostsResponseDto(postIds);
     }
 
+    // 사용자 정보 페이지
+    public UserInfoResponseDto getUserInfo(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("해당 ID의 사용자를 찾을 수 없습니다: "));
 
+        // 작성자의 프로필 이미지 URL을 생성
+        String authorProfileImageUrl;
+
+        if (user.getImage() != null) {
+            // 유저의 프로필 이미지가 있으면 -> 해당 이미지의 URL 생성
+            String s3Key = user.getImage().getS3Key();
+            authorProfileImageUrl = "https://" + cloudfrontDomain + "/" + s3Key;
+        } else {
+            // 유저의 프로필 이미지가 없으면 -> 설정해둔 기본 이미지 URL 사용
+            authorProfileImageUrl = "https://" + cloudfrontDomain + "/" + defaultProfileImageKey;
+        }
+        return new UserInfoResponseDto(user.getNickname(), authorProfileImageUrl);
+    }
 
 
 
