@@ -6,6 +6,8 @@ import com.ktb.community.dto.response.UserInfoResponseDto;
 import com.ktb.community.entity.Image;
 import com.ktb.community.entity.User;
 import com.ktb.community.entity.UserLikePosts;
+import com.ktb.community.exception.BusinessException;
+import com.ktb.community.exception.ErrorCode;
 import com.ktb.community.repository.UserLikePostsRepository;
 import com.ktb.community.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +18,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.ktb.community.exception.ErrorCode.MEMBER_NOT_FOUND;
+import static com.ktb.community.exception.ErrorCode.PASSWORD_MISMATCH;
 
 @Service
 @RequiredArgsConstructor
@@ -50,14 +55,16 @@ public class UserService {
     // 회원 비밀번호 수정
     public void updatePassword(PasswordRequestDto dto, Long userId) {
 
-        // 1. 새 비밀번호와 확인용 비밀번호가 일치하는지 확인
-        if (!dto.getPassword().equals(dto.getRePassword())) {
-            throw new IllegalArgumentException("새 비밀번호가 일치하지 않습니다.");
-        }
+
 
         // 2. 사용자 정보 조회
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(MEMBER_NOT_FOUND));
+
+        // 2. 비밀번호가 일치 여부 확인
+        if (!user.getPassword().equals(bCryptPasswordEncoder.encode(dto.getPassword()))) {
+            throw new BusinessException(PASSWORD_MISMATCH);
+        }
 
         // 3. 새 비밀번호를 암호화하여 업데이트
         user.updatePassword(bCryptPasswordEncoder.encode(dto.getPassword()));
@@ -68,11 +75,11 @@ public class UserService {
     public void deleteUser(Long userId, String password) {
         // 1. 사용자 정보 조회
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(MEMBER_NOT_FOUND));
 
         // 2. 비밀번호 확인
         if (!bCryptPasswordEncoder.matches(password, user.getPassword())) {
-            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+            throw new BusinessException(PASSWORD_MISMATCH);
         }
 
         // 3. 사용자 삭제

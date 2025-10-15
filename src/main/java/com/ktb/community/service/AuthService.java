@@ -4,6 +4,8 @@ import com.ktb.community.dto.request.JoinRequestDto;
 import com.ktb.community.entity.RefreshEntity;
 import com.ktb.community.entity.Role;
 import com.ktb.community.entity.User;
+import com.ktb.community.exception.BusinessException;
+import com.ktb.community.exception.ErrorCode;
 import com.ktb.community.repository.RefreshRepository;
 import com.ktb.community.repository.UserRepository;
 import com.ktb.community.util.JWTUtil;
@@ -19,6 +21,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+
+import static com.ktb.community.exception.ErrorCode.EMAIL_DUPLICATION;
+import static com.ktb.community.exception.ErrorCode.NICKNAME_DUPLICATION;
 
 @Service
 @RequiredArgsConstructor
@@ -38,16 +43,16 @@ public class AuthService {
         String nickname = dto.getNickname();
 
         if(!password.equals(rePassword)) {
-            throw new RuntimeException("비밀번호가 다릅니다");
+            throw new BusinessException(ErrorCode.PASSWORD_MISMATCH);
         }
 
         boolean isExistEmail = userRepository.existsByEmail(email);
         boolean isExistNickname = userRepository.existsByNickname(nickname);
         if  (isExistEmail) {
-            throw new RuntimeException("이메일이 중복됩니다.");
+            throw new BusinessException(EMAIL_DUPLICATION);
         }
         if (isExistNickname) {
-            throw new RuntimeException("이메일이 중복됩니다.");
+            throw new BusinessException(NICKNAME_DUPLICATION);
         }
 
         User user = User.builder()

@@ -10,6 +10,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -74,17 +75,46 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         addRefreshEntity(userId, refresh,3*86400000L );
 
         // 5. 응답 설정
+       ResponseCookie cookie = ResponseCookie.from("refresh", refresh)
+                .path("/")
+                .maxAge(24 * 60 * 60)
+                .httpOnly(true)
+               .secure(true)
+                .sameSite("None") // http 환경의 cross-site 통신을 위해 "Lax"로 설정
+                .build();
+        response.addHeader("Set-Cookie", cookie.toString());
         response.setHeader("access", access); // access 토큰은 헤더에 발급 후 로컬 스토리지에 저장 (csrf 공격 방어)
-        response.addCookie(createCookie("refresh", refresh)); // refresh 토큰은 쿠키에 발급 (XSS 공격 방어)
+        //response.addCookie(createCookie("refresh", refresh)); // refresh 토큰은 쿠키에 발급 (XSS 공격 방어)
         response.setStatus(HttpStatus.OK.value());
     }
 
     //로그인 실패시 실행하는 메소드
     @Override
-    protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) {
+    protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) throws IOException {
+        // 응답 상태코드를 401 (Unauthorized)로 설정
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
 
-        //로그인 실패시 401 응답 코드 반환
-        response.setStatus(401);
+        // 실패 원인(Exception)에 따라 다른 에러 메시지 설정
+        String errorMessage;
+        // '해당 이메일은 등록되지 않았습니다' 예외는 InternalAuthenticationServiceException 으로 래핑됩니다.
+        if (failed instanceof org.springframework.security.authentication.InternalAuthenticationServiceException) {
+            errorMessage = "등록되지 않은 이메일입니다.";
+        } else if (failed instanceof org.springframework.security.authentication.BadCredentialsException) {
+            errorMessage = "비밀번호가 일치하지 않습니다.";
+        } else {
+            errorMessage = "로그인에 실패하였습니다.";
+        }
+
+        // ErrorResponseDto와 유사한 형식의 JSON을 직접 생성하여 응답
+        String jsonResponse = String.format(
+                "{\"status\": %d, \"code\": \"LOGIN_FAILED\", \"message\": \"%s\"}",
+                HttpServletResponse.SC_UNAUTHORIZED,
+                errorMessage
+        );
+
+        response.getWriter().write(jsonResponse);
     }
 
     private Cookie createCookie(String key, String value) {
@@ -92,7 +122,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         Cookie cookie = new Cookie(key, value);
         cookie.setMaxAge(24*60*60);
         //cookie.setSecure(true);
-        //cookie.setPath("/");
+        cookie.setPath("/");
         cookie.setHttpOnly(true);
 
         return cookie;
