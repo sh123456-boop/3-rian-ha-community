@@ -55,6 +55,16 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
+    // 유저 닉네임이 중복되었나 확인하는 요청
+    @GetMapping("/v1/users/me/nickname")
+    public ResponseEntity<Boolean> findNickname(@Valid @RequestParam String nickname) {
+        boolean result = userService.findNickname(nickname);
+        // 닉네임 변경 가능
+        if (result) return ResponseEntity.ok(true);
+        // 닉네임 변경 불가능
+        else return ResponseEntity.ok(false);
+    }
+
     // 비밀번호 수정
     @Operation(
             summary = "비밀번호 변경",

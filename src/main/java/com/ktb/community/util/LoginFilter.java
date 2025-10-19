@@ -77,7 +77,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         // 5. 응답 설정
        ResponseCookie cookie = ResponseCookie.from("refresh", refresh)
                 .path("/")
-                .maxAge(24 * 60 * 60)
+                .maxAge(24 * 60 * 60 * 3)
                 .httpOnly(true)
                .secure(true)
                 .sameSite("None") // http 환경의 cross-site 통신을 위해 "Lax"로 설정

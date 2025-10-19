@@ -32,7 +32,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     protected ResponseEntity<ErrorResponseDto> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
         log.warn("handleMethodArgumentNotValidException: {}", e.getMessage());
-        return ErrorResponseDto.toResponseEntity(ErrorCode.INVALID_INPUT_VALUE);
+
+        // 1. 발생한 모든 에러 중 첫 번째 에러의 메시지를 가져옵니다.
+        String errorMessage = e.getBindingResult().getAllErrors().get(0).getDefaultMessage();
+
+        // 2. 해당 메시지를 ErrorResponseDto를 통해 반환합니다.
+        // ErrorCode의 기본 메시지 대신, 동적으로 생성된 errorMessage를 사용합니다.
+        return ErrorResponseDto.toResponseEntity(ErrorCode.INVALID_INPUT_VALUE, errorMessage);
+
     }
 
     /**

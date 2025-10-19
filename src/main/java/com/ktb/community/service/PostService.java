@@ -109,13 +109,16 @@ public class PostService {
                 .map(postImage -> {
                     Image image = postImage.getImage();
                     // 2. S3 Key에 CloudFront 도메인을 붙여 완전한 URL 생성
-                    String imageUrl = cloudfrontDomain + "/" + image.getS3Key();
-                    return new PostResponseDto.ImageInfo(imageUrl, postImage.getOrders());
+                    String imageUrl = "https://" + cloudfrontDomain + "/" + image.getS3Key();
+                    return new PostResponseDto.ImageInfo(imageUrl, postImage.getOrders(), image.getS3Key());
                 })
                 .collect(Collectors.toList());
 
+        // 좋아요 누른 게시글인지 확인
+        boolean likedByUser = userLikePostsRepository.existsByUserAndPost(author, post);
+
         // 3. 최종 응답 dto 반환
-        return new PostResponseDto(post, imageInfos, authorProfileImageUrl);
+        return new PostResponseDto(post, imageInfos, authorProfileImageUrl, author.getId(), likedByUser);
     }
 
     // 게시글 전체 조회(인피니티 스크롤)

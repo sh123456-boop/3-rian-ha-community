@@ -67,16 +67,16 @@ public class CommentController {
             }
     )
     @PostMapping("/v1/posts/{postId}/comments")
-    public ResponseEntity<Void> createComment(
+    public ResponseEntity<CommentResponseDto> createComment(
             @PathVariable Long postId,
             @Valid @RequestBody CommentRequestDto requestDto,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         Long userId = userDetails.getUserId();
-        commentService.createComment(postId, userId, requestDto);
+        CommentResponseDto comment = commentService.createComment(postId, userId, requestDto);
+        return ResponseEntity.ok(comment);
 
-        // 반환은 post 상세 조회 페이지로
-        return ResponseEntity.created(URI.create("/v1/posts/" + postId)).build();
+
     }
 
     // 댓글 조회(인피니티 스크롤)
@@ -150,7 +150,7 @@ public class CommentController {
                     )
             }
     )
-    @PatchMapping("/v1/comments/{commentId}")
+    @PutMapping("/v1/comments/{commentId}")
     public ResponseEntity<Void> updateComment(
             @PathVariable Long commentId,
             @Valid @RequestBody CommentRequestDto requestDto,

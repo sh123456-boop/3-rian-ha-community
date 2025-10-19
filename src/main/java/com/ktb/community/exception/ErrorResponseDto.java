@@ -21,4 +21,16 @@ public class ErrorResponseDto {
                         .message(errorCode.getMessage())
                         .build());
     }
+
+    // ✨새로 추가하거나 수정할 메서드✨
+    public static ResponseEntity<ErrorResponseDto> toResponseEntity(ErrorCode errorCode, String message) {
+        return ResponseEntity
+                .status(errorCode.getStatus())
+                .body(ErrorResponseDto.builder()
+                        .status(errorCode.getStatus().value())
+                        .code(errorCode.getCode())
+                        .code(errorCode.getCode())
+                        .message(message) // @Valid에서 가져온 동적 메시지로 설정
+                        .build());
+    }
 }

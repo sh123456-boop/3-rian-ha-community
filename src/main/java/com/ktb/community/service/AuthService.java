@@ -16,6 +16,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -42,6 +43,7 @@ public class AuthService {
         String rePassword = dto.getRePassword();
         String nickname = dto.getNickname();
 
+        //비밀번호 검증 로직
         if(!password.equals(rePassword)) {
             throw new BusinessException(ErrorCode.PASSWORD_MISMATCH);
         }
@@ -110,9 +112,18 @@ public class AuthService {
         refreshRepository.deleteByRefresh(refresh);
         addRefreshEntity( Id, newRefresh, 3*86400000L);
 
+        ResponseCookie cookie = ResponseCookie.from("refresh", refresh)
+                .path("/")
+                .maxAge(24 * 60 * 60 * 3)
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("None") // http 환경의 cross-site 통신을 위해 "Lax"로 설정
+                .build();
+        response.addHeader("Set-Cookie", cookie.toString());
+
         //response
         response.setHeader("access", newAccess);
-        response.addCookie(createCookie("refresh", newRefresh));
+        //response.addCookie(createCookie("refresh", newRefresh));
 
         return new ResponseEntity<>(HttpStatus.OK);
     }

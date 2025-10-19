@@ -52,17 +52,23 @@ public class UserService {
         user.updateNickname(nickname);
     }
 
+    // 회원 닉네임 중복 검사
+    public boolean findNickname(String nickname) {
+        if (userRepository.existsByNickname(nickname)) {
+            return false;
+        }
+        return true;
+    }
+
     // 회원 비밀번호 수정
     public void updatePassword(PasswordRequestDto dto, Long userId) {
-
-
 
         // 2. 사용자 정보 조회
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(MEMBER_NOT_FOUND));
 
         // 2. 비밀번호가 일치 여부 확인
-        if (!user.getPassword().equals(bCryptPasswordEncoder.encode(dto.getPassword()))) {
+        if (!dto.getPassword().equals(dto.getRePassword())) {
             throw new BusinessException(PASSWORD_MISMATCH);
         }
 
@@ -171,10 +177,6 @@ public class UserService {
             // 유저의 프로필 이미지가 없으면 -> 설정해둔 기본 이미지 URL 사용
             authorProfileImageUrl = "https://" + cloudfrontDomain + "/" + defaultProfileImageKey;
         }
-        return new UserInfoResponseDto(user.getNickname(), authorProfileImageUrl);
+        return new UserInfoResponseDto(user.getNickname(), user.getEmail(),authorProfileImageUrl, user.getId());
     }
-
-
-
-
 }

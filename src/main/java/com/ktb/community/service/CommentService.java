@@ -29,7 +29,7 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
     private final UserRepository userRepository;
-    private static final int PAGE_SIZE = 20; // 한 번에 불러올 댓글 수
+    private static final int PAGE_SIZE = 5; // 한 번에 불러올 댓글 수
 
     @Value("${aws.cloud_front.domain}")
     private String cloudfrontDomain;
@@ -38,7 +38,7 @@ public class CommentService {
     private String defaultProfileImageKey;
 
     // 댓글 작성
-    public void createComment(Long postId, Long userId, CommentRequestDto dto) {
+    public CommentResponseDto createComment(Long postId, Long userId, CommentRequestDto dto) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new IllegalArgumentException("게시물을 찾을 수 없습니다."));
         User user = userRepository.findById(userId)
@@ -48,8 +48,20 @@ public class CommentService {
         post.setCommentList(comment); // 연관관계 메서드
         commentRepository.save(comment);
 
+        String profileImageUrl;
+
+        if (user != null && user.getImage() != null) {
+            // 유저의 프로필 이미지가 있으면 -> 해당 이미지의 URL 생성
+            String s3Key = user.getImage().getS3Key();
+            profileImageUrl = "https://" + cloudfrontDomain + "/" + s3Key;
+        } else {
+            // 유저의 프로필 이미지가 없으면 -> 설정해둔 기본 이미지 URL 사용
+            profileImageUrl = "https://" + cloudfrontDomain + "/" + defaultProfileImageKey;
+        }
         // 게시물의 댓글 수 1 증가
         post.getPostCount().increaseCmtCount();
+        CommentResponseDto commentResponseDto = new CommentResponseDto(comment, profileImageUrl,user.getId() );
+        return commentResponseDto;
     }
 
     // 커서 기반 댓글 조회
@@ -78,7 +90,7 @@ public class CommentService {
                     }
 
                     // 수정된 생성자를 사용하여 DTO 생성
-                    return new CommentResponseDto(comment, profileImageUrl);
+                    return new CommentResponseDto(comment, profileImageUrl, author.getId());
                 })
                 .collect(Collectors.toList());
 
