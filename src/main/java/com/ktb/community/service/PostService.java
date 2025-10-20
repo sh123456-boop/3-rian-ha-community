@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
 public class PostService {
 
     private final PostRepository postRepository;
@@ -44,6 +44,7 @@ public class PostService {
     private String defaultProfileImageKey;
 
     // 게시글 작성
+    @Transactional
     public Long createPost(PostCreateRequestDto dto, Long userId) {
 
         //1. 사용자 정보 조회
@@ -150,6 +151,7 @@ public class PostService {
     }
 
     // 게시글 수정
+    @Transactional
     public void updatePost(Long postId, PostCreateRequestDto requestDto, Long userId) {
         // 1. 게시물 조회 및 수정 권한 확인
         Post post = postRepository.findById(postId)
@@ -182,6 +184,7 @@ public class PostService {
     }
 
     // 게시글 삭제
+    @Transactional
     public void deletePost(Long postId, Long userId) throws AccessDeniedException {
         // 1. 게시물 조회
         Post post = postRepository.findById(postId)
@@ -208,6 +211,7 @@ public class PostService {
 
 
     // 이미지 update시 사용하지 않는 s3 이미지 삭제
+    @Transactional
     private void deleteS3Image(PostCreateRequestDto requestDto, Post post) {
         // 1. 기존에 저장되어 있던 이미지의 S3 Key 목록을 추출합니다.
         Set<String> existingImageKeys = post.getPostImageList().stream()
@@ -232,6 +236,7 @@ public class PostService {
     }
 
     // 게시글 좋아요 추가 메서드
+    @Transactional
     public void likePost(Long postId, Long userId) {
         // 1. 게시물과 사용자 정보를 조회합니다.
         Post post = postRepository.findById(postId)
@@ -253,6 +258,7 @@ public class PostService {
     }
 
     // 게시글 좋아요 취소 메서드
+    @Transactional
     public void unlikePost(Long postId, Long userId) {
         // 1. 게시물과 사용자 정보를 조회합니다.
         Post post = postRepository.findById(postId)

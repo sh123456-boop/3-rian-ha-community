@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
 public class CommentService {
 
     private final CommentRepository commentRepository;
@@ -38,6 +38,7 @@ public class CommentService {
     private String defaultProfileImageKey;
 
     // 댓글 작성
+    @Transactional
     public CommentResponseDto createComment(Long postId, Long userId, CommentRequestDto dto) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new IllegalArgumentException("게시물을 찾을 수 없습니다."));
@@ -65,7 +66,6 @@ public class CommentService {
     }
 
     // 커서 기반 댓글 조회
-    @Transactional(readOnly = true)
     public CommentSliceResponseDto getCommentsByCursor(Long postId, Long lastCommentId) {
         Pageable pageable = PageRequest.of(0, PAGE_SIZE);
 
@@ -99,6 +99,7 @@ public class CommentService {
 
 
     // 댓글 수정
+    @Transactional
     public void updateComment(Long commentId, Long userId, CommentRequestDto dto) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new IllegalArgumentException("댓글을 찾을 수 없습니다."));
@@ -111,6 +112,7 @@ public class CommentService {
     }
 
     // 댓글 삭제
+    @Transactional
     public void deleteComment(Long commentId, Long userId) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new IllegalArgumentException("댓글을 찾을 수 없습니다."));

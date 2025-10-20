@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -20,6 +21,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional(readOnly = true)
 public class S3Service {
 
     private final S3Presigner s3Presigner;
@@ -36,6 +38,7 @@ public class S3Service {
      * @return PreSignedUrlResponseDto (내부에 key와 url을 포함하는 DTO)
      */
     // 파일 업로드용 Presigned URL 생성
+    @Transactional
     public PreSignedUrlResponseDto getPostPresignedPutUrl(Long userId, String fileName) {
 
         // 1. S3에 저장될 전체 경로(s3_key) 설정
@@ -47,6 +50,7 @@ public class S3Service {
     }
 
     // 유저 프로필용 Presigned Url 생성
+    @Transactional
     public PreSignedUrlResponseDto getProfileImagePresignedUrl(Long userId, String fileName) {
 
         // S3 키 경로를 프로필 이미지용으로 지정
@@ -58,6 +62,7 @@ public class S3Service {
     }
 
     // s3 파일 삭제
+    @Transactional
     public void deleteFile(String s3Key) {
         try {
             // 삭제할 객체를 지정하는 요청 객체 생성

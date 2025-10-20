@@ -1,5 +1,6 @@
 package com.ktb.community.controller;
 
+import com.ktb.community.dto.ApiResponseDto;
 import com.ktb.community.dto.request.*;
 import com.ktb.community.dto.response.LikedPostsResponseDto;
 import com.ktb.community.dto.response.PreSignedUrlResponseDto;
@@ -45,24 +46,24 @@ public class UserController {
             }
     )
     @PutMapping("/v1/users/me/nickname")
-    public ResponseEntity<Void> updateNickname(
+    public ApiResponseDto<String> updateNickname(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody NicknameRequestDto dto
     ) {
         Long userId = userDetails.getUserId();
         userService.updateNickname(dto.getNickname(), userId);
 
-        return ResponseEntity.ok().build();
+        return ApiResponseDto.success("닉네임이 수정되었습니다.");
     }
 
     // 유저 닉네임이 중복되었나 확인하는 요청
     @GetMapping("/v1/users/me/nickname")
-    public ResponseEntity<Boolean> findNickname(@Valid @RequestParam String nickname) {
+    public ApiResponseDto<Boolean> findNickname(@Valid @RequestParam String nickname) {
         boolean result = userService.findNickname(nickname);
         // 닉네임 변경 가능
-        if (result) return ResponseEntity.ok(true);
+        if (result) return ApiResponseDto.success(true);
         // 닉네임 변경 불가능
-        else return ResponseEntity.ok(false);
+        else return ApiResponseDto.success(false);
     }
 
     // 비밀번호 수정
@@ -86,14 +87,14 @@ public class UserController {
             }
     )
     @PutMapping("/v1/users/me/password")
-    public ResponseEntity<Void> updatePassword(
+    public ApiResponseDto<Void> updatePassword(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody PasswordRequestDto requestDto) {
 
         Long currentUserId = userDetails.getUserId();
         userService.updatePassword(requestDto, currentUserId);
 
-        return ResponseEntity.ok().build();
+        return ApiResponseDto.success("비밀번호가 수정되었습니다.");
     }
 
     // 회원 탈퇴
@@ -115,14 +116,14 @@ public class UserController {
             }
     )
     @DeleteMapping("/v1/users/me")
-    public ResponseEntity<Void> deleteUser(
+    public ApiResponseDto<Object> deleteUser(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody UserDeleteRequestDto requestDto) {
 
         Long currentUserId = userDetails.getUserId();
         userService.deleteUser(currentUserId, requestDto.getPassword());
 
-        return ResponseEntity.noContent().build();
+        return ApiResponseDto.success("회원이 탈퇴되었습니다.");
     }
 
     // 유저 프로필 이미지 추가
@@ -146,14 +147,14 @@ public class UserController {
             }
     )
     @PostMapping("/v1/users/me/image")
-    public ResponseEntity<Void> updateProfileImage(
+    public ApiResponseDto<Object> updateProfileImage(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody ProfileImageRequestDto requestDto) {
 
         Long userId = userDetails.getUserId();
         userService.updateProfileImage(userId, requestDto.getS3_key());
 
-        return ResponseEntity.ok().build();
+        return ApiResponseDto.success("프로필 이미지가 수정되었습니다.");
     }
 
     // 유저 프로필 이미지 삭제
@@ -169,13 +170,13 @@ public class UserController {
             }
     )
     @DeleteMapping("/v1/users/me/image")
-    public ResponseEntity<Void> deleteProfileImage(
+    public ApiResponseDto<Object> deleteProfileImage(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         Long userId = userDetails.getUserId();
         userService.deleteProfileImage(userId);
 
-        return ResponseEntity.noContent().build();
+        return ApiResponseDto.success("프로필 이미지가 삭제되었습니다.");
     }
 
     // 좋아요 게시물 id 반환
@@ -200,13 +201,13 @@ public class UserController {
             }
     )
     @GetMapping("/v1/users/me/liked-posts")
-    public ResponseEntity<LikedPostsResponseDto> getMyLikedPosts(
+    public ApiResponseDto<LikedPostsResponseDto> getMyLikedPosts(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         Long currentUserId = userDetails.getUserId();
         LikedPostsResponseDto responseDto = userService.getLikedPosts(currentUserId);
 
-        return ResponseEntity.ok(responseDto);
+        return ApiResponseDto.success(responseDto);
     }
 
     // 사용자 닉네임, 프로필 이미지 수정 페이지
@@ -225,11 +226,11 @@ public class UserController {
                     )
             }
     )
+
     @GetMapping("/v1/users/me")
-    public ResponseEntity<UserInfoResponseDto> getUserInfo(@AuthenticationPrincipal CustomUserDetails userDetails) {
+    public ApiResponseDto<UserInfoResponseDto> getUserInfo(@AuthenticationPrincipal CustomUserDetails userDetails) {
         Long userId = userDetails.getUserId();
         UserInfoResponseDto userInfo = userService.getUserInfo(userId);
-        return ResponseEntity.ok(userInfo);
+        return ApiResponseDto.success(userInfo);
     }
-
 }

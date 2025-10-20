@@ -1,5 +1,6 @@
 package com.ktb.community.controller;
 
+import com.ktb.community.dto.ApiResponseDto;
 import com.ktb.community.dto.request.PreSignedUrlRequestDto;
 import com.ktb.community.dto.response.PreSignedUrlResponseDto;
 import com.ktb.community.service.CustomUserDetails;
@@ -50,7 +51,7 @@ public class S3urlController {
             }
     )
     @PostMapping("/v1/posts/presignedUrl")
-    public ResponseEntity<PreSignedUrlResponseDto> getUrl(
+    public ApiResponseDto<PreSignedUrlResponseDto> getUrl(
             @RequestBody @Valid PreSignedUrlRequestDto dto,
             @AuthenticationPrincipal CustomUserDetails userDetails
             ) {
@@ -58,7 +59,7 @@ public class S3urlController {
         Long userId = userDetails.getUserId();
 
         PreSignedUrlResponseDto urlResponseDto = s3Service.getPostPresignedPutUrl(userId, dto.getFileName());
-        return ResponseEntity.ok(urlResponseDto);
+        return ApiResponseDto.success(urlResponseDto);
     }
 
 
@@ -89,13 +90,13 @@ public class S3urlController {
             }
     )
     @PostMapping("/v1/users/presignedUrl")
-    public ResponseEntity<PreSignedUrlResponseDto> getProfileUrl (
+    public ApiResponseDto<PreSignedUrlResponseDto> getProfileUrl (
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody PreSignedUrlRequestDto requestDto
     ){
         Long userId = userDetails.getUserId();
         PreSignedUrlResponseDto urlResponseDto = s3Service.getProfileImagePresignedUrl(userId, requestDto.getFileName());
-        return ResponseEntity.ok(urlResponseDto);
+        return ApiResponseDto.success(urlResponseDto);
     }
 
 }

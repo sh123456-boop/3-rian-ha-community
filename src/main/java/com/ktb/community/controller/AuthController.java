@@ -1,5 +1,6 @@
 package com.ktb.community.controller;
 
+import com.ktb.community.dto.ApiResponseDto;
 import com.ktb.community.dto.request.JoinRequestDto;
 import com.ktb.community.dto.request.LoginRequestDto;
 import com.ktb.community.service.AuthService;
@@ -62,9 +63,9 @@ public class AuthController {
             }
     )
     @PostMapping("/v1/auth/join")
-    public ResponseEntity<String> join(@Valid @RequestBody JoinRequestDto dto) {
+    public ApiResponseDto<Object> join(@Valid @RequestBody JoinRequestDto dto) {
         authService.join(dto);
-        return ResponseEntity.ok("회원가입이 완료되었습니다.");
+        return ApiResponseDto.success("회원가입이 완료되었습니다.");
     }
 
     // Access_Token 토큰 재발급
@@ -106,8 +107,9 @@ public class AuthController {
             }
     )
     @PostMapping("/v1/auth/reissue")
-    public ResponseEntity<?> reissue(HttpServletRequest request, HttpServletResponse response){
-        return authService.reissue(request, response);
+    public ApiResponseDto<Object> reissue(HttpServletRequest request, HttpServletResponse response){
+        authService.reissue(request, response);
+        return ApiResponseDto.success("토큰이 재발급되었습니다.");
     }
 
     // 로그인은 필터 단에서 처리되므로 해당 로직은 수행하지 않음.

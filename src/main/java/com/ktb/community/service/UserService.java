@@ -24,7 +24,7 @@ import static com.ktb.community.exception.ErrorCode.PASSWORD_MISMATCH;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
 public class UserService {
 
     private final UserRepository userRepository;
@@ -38,6 +38,7 @@ public class UserService {
     private String defaultProfileImageKey;
 
     // 회원 닉네임 수정
+    @Transactional
     public void updateNickname(String nickname, Long userId) {
         // 1. 닉네임 중복 확인
         if (userRepository.existsByNickname(nickname)) {
@@ -61,6 +62,7 @@ public class UserService {
     }
 
     // 회원 비밀번호 수정
+    @Transactional
     public void updatePassword(PasswordRequestDto dto, Long userId) {
 
         // 2. 사용자 정보 조회
@@ -78,6 +80,7 @@ public class UserService {
 
 
     // 회원 탈퇴
+    @Transactional
     public void deleteUser(Long userId, String password) {
         // 1. 사용자 정보 조회
         User user = userRepository.findById(userId)
@@ -121,6 +124,7 @@ public class UserService {
     }
 
     // 프로필 이미지 삭제
+    @Transactional
     public void deleteProfileImage(Long userId) {
         // 1. 사용자 정보를 조회
         User user = userRepository.findById(userId)
@@ -144,7 +148,7 @@ public class UserService {
      * @param userId 현재 사용자 ID
      * @return 게시물 ID의 List<Long>
      */
-    @Transactional(readOnly = true) // 단순 조회이므로 readOnly = true 옵션으로 성능 최적화
+    // 단순 조회이므로 readOnly = true 옵션으로 성능 최적화
     public LikedPostsResponseDto getLikedPosts(Long userId) {
         // 1. 사용자 정보를 조회
         User user = userRepository.findById(userId)

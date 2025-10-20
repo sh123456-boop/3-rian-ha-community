@@ -1,10 +1,9 @@
 package com.ktb.community.controller;
 
+import com.ktb.community.dto.ApiResponseDto;
 import com.ktb.community.dto.request.PostCreateRequestDto;
-import com.ktb.community.dto.request.PreSignedUrlRequestDto;
 import com.ktb.community.dto.response.PostResponseDto;
 import com.ktb.community.dto.response.PostSliceResponseDto;
-import com.ktb.community.dto.response.PreSignedUrlResponseDto;
 import com.ktb.community.service.CommentService;
 import com.ktb.community.service.CustomUserDetails;
 import com.ktb.community.service.PostService;
@@ -69,7 +68,7 @@ public class PostController {
             }
     )
     @PostMapping("/v1/posts")
-    public ResponseEntity<Void> createPost(@RequestBody @Valid PostCreateRequestDto dto,
+    public ApiResponseDto<Object> createPost(@RequestBody @Valid PostCreateRequestDto dto,
                                            @AuthenticationPrincipal CustomUserDetails userDetails) {
         // spring security를 통해 현재 인증된 사용자의 정보를 가져옴
         Long userId = userDetails.getUserId();
@@ -77,7 +76,7 @@ public class PostController {
         Long postId = postService.createPost(dto, userId);
 
         // 생성된 게시물의 uri를 location 헤더에 담아 201 created 응답을 보냄
-        return ResponseEntity.created(URI.create("/v1/posts/" + postId)).build();
+        return ApiResponseDto.success("게시글이 저장되었습니다.");
     }
 
     // 게시글 단건 조회
@@ -111,10 +110,10 @@ public class PostController {
             }
     )
     @GetMapping("/v1/posts/{id}")
-    public ResponseEntity<PostResponseDto> getPost(@PathVariable("id") Long postId) {
+    public ApiResponseDto<PostResponseDto> getPost(@PathVariable("id") Long postId) {
         PostResponseDto postResponseDto = postService.getPost(postId);
 
-        return ResponseEntity.ok(postResponseDto);
+        return ApiResponseDto.success(postResponseDto);
     }
 
 
@@ -144,11 +143,11 @@ public class PostController {
             }
     )
     @GetMapping("v1/posts")
-    public ResponseEntity<PostSliceResponseDto> getPostSlice(
+    public ApiResponseDto<PostSliceResponseDto> getPostSlice(
             @RequestParam(required = false) Long lastPostId) {
 
         PostSliceResponseDto response = postService.getPostSlice(lastPostId);
-        return ResponseEntity.ok(response);
+        return ApiResponseDto.success(response);
     }
 
     // 게시글삭제
@@ -177,7 +176,7 @@ public class PostController {
             }
     )
     @DeleteMapping("/v1/posts/{id}")
-    public ResponseEntity<String> deletePost(@PathVariable("id") Long postId,
+    public ApiResponseDto<Object> deletePost(@PathVariable("id") Long postId,
                                            @AuthenticationPrincipal CustomUserDetails userDetails
                                            ) throws AccessDeniedException {
         // 현재 인증된 사용자의 ID를 가져옵니다.
@@ -186,7 +185,7 @@ public class PostController {
         postService.deletePost(postId, currentUserId);
 
         // 성공적으로 삭제되었을 때 표준적인 응답은 204 No Content 입니다.
-        return ResponseEntity.ok("게시글이 삭제되었습니다.");
+        return ApiResponseDto.success("게시글이 삭제되었습니다.");
     }
 
     // 게시글 수정
@@ -227,13 +226,13 @@ public class PostController {
             }
     )
     @PutMapping("/v1/posts/{id}")
-    public ResponseEntity<Void> updatePost(@PathVariable("id") Long postId,
+    public ApiResponseDto<Object> updatePost(@PathVariable("id") Long postId,
                                            @RequestBody PostCreateRequestDto requestDto,
                                            @AuthenticationPrincipal CustomUserDetails userDetails) {
         Long currentUserId = userDetails.getUserId();
         postService.updatePost(postId, requestDto, currentUserId);
 
-        return ResponseEntity.created(URI.create("/v1/posts/" + postId)).build();
+        return ApiResponseDto.success("게시글이 수정되었습니다.");
     }
 
     // 게시글 좋아요 추가
@@ -259,7 +258,7 @@ public class PostController {
             }
     )
     @PostMapping("/v1/posts/{id}/like")
-    public ResponseEntity<Void> likePost(
+    public ApiResponseDto<Object> likePost(
             @PathVariable("id") Long postId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
@@ -270,7 +269,7 @@ public class PostController {
         postService.likePost(postId, currentUserId);
 
         // 성공 시 200 OK 응답을 반환합니다.
-        return ResponseEntity.ok().build();
+        return ApiResponseDto.success("좋아요가 추가되었습니다.");
     }
 
     // 게시글 좋아요 취소
@@ -296,7 +295,7 @@ public class PostController {
             }
     )
     @DeleteMapping("/v1/posts/{id}/like")
-    public ResponseEntity<Void> unlikePost(
+    public ApiResponseDto<Object> unlikePost(
             @PathVariable("id") Long postId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
@@ -304,7 +303,7 @@ public class PostController {
         postService.unlikePost(postId, currentUserId);
 
         // 성공 시 204 No Content 응답을 반환합니다.
-        return ResponseEntity.noContent().build();
+        return ApiResponseDto.success("좋아요가 취소되었습니다.");
     }
 
 }

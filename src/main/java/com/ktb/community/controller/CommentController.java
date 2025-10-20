@@ -1,5 +1,6 @@
 package com.ktb.community.controller;
 
+import com.ktb.community.dto.ApiResponseDto;
 import com.ktb.community.dto.request.CommentRequestDto;
 import com.ktb.community.dto.response.CommentResponseDto;
 import com.ktb.community.dto.response.CommentSliceResponseDto;
@@ -19,8 +20,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.net.URI;
 
 @Tag(name = "Comment API", description = "댓글 도메인 API")
 @RestController
@@ -67,14 +66,14 @@ public class CommentController {
             }
     )
     @PostMapping("/v1/posts/{postId}/comments")
-    public ResponseEntity<CommentResponseDto> createComment(
+    public ApiResponseDto<Object> createComment(
             @PathVariable Long postId,
             @Valid @RequestBody CommentRequestDto requestDto,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         Long userId = userDetails.getUserId();
         CommentResponseDto comment = commentService.createComment(postId, userId, requestDto);
-        return ResponseEntity.ok(comment);
+        return ApiResponseDto.success("댓글이 저장되었습니다.");
 
 
     }
@@ -112,12 +111,12 @@ public class CommentController {
             }
     )
     @GetMapping("/v1/posts/{postId}/comments")
-    public ResponseEntity<CommentSliceResponseDto> getCommentsByCursor(
+    public ApiResponseDto<Object> getCommentsByCursor(
             @PathVariable Long postId,
             @RequestParam(required = false) Long lastCommentId) {
 
         CommentSliceResponseDto response = commentService.getCommentsByCursor(postId, lastCommentId);
-        return ResponseEntity.ok(response);
+        return ApiResponseDto.success(response);
     }
 
     // 댓글 수정
@@ -151,7 +150,7 @@ public class CommentController {
             }
     )
     @PutMapping("/v1/comments/{commentId}")
-    public ResponseEntity<Void> updateComment(
+    public ApiResponseDto<Object> updateComment(
             @PathVariable Long commentId,
             @Valid @RequestBody CommentRequestDto requestDto,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -159,7 +158,7 @@ public class CommentController {
         Long userId = userDetails.getUserId();
         commentService.updateComment(commentId, userId, requestDto);
 
-        return ResponseEntity.ok().build();
+        return ApiResponseDto.success("댓글이 수정되었습니다.");
     }
 
 
@@ -186,14 +185,14 @@ public class CommentController {
             }
     )
     @DeleteMapping("/v1/comments/{commentId}")
-    public ResponseEntity<Void> deleteComment(
+    public ApiResponseDto<Object> deleteComment(
             @PathVariable Long commentId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         Long userId = userDetails.getUserId();
         commentService.deleteComment(commentId, userId);
 
-        return ResponseEntity.noContent().build();
+        return ApiResponseDto.success("댓글이 삭제되었습니다.");
     }
 
 }

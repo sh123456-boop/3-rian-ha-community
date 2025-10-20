@@ -13,13 +13,13 @@ import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 
@@ -28,7 +28,7 @@ import static com.ktb.community.exception.ErrorCode.NICKNAME_DUPLICATION;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
 public class AuthService {
 
     private final UserRepository userRepository;
@@ -37,6 +37,7 @@ public class AuthService {
     private final JWTUtil jwtUtil;
 
     // 회원가입
+    @Transactional
     public void join(JoinRequestDto dto) {
         String email = dto.getEmail();
         String password = dto.getPassword();
@@ -67,6 +68,7 @@ public class AuthService {
     }
 
     // refresh 토큰으로 access 토큰 재발급
+    @Transactional
     public ResponseEntity<?> reissue(HttpServletRequest request, HttpServletResponse response) {
 
         // get refresh token
