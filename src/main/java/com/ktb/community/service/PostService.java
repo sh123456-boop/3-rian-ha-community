@@ -5,6 +5,7 @@ import com.ktb.community.dto.response.PostResponseDto;
 import com.ktb.community.dto.response.PostSliceResponseDto;
 import com.ktb.community.dto.response.PostSummaryDto;
 import com.ktb.community.entity.*;
+import com.ktb.community.exception.BusinessException;
 import com.ktb.community.repository.ImageRepository;
 import com.ktb.community.repository.PostRepository;
 import com.ktb.community.repository.UserLikePostsRepository;
@@ -23,9 +24,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static com.ktb.community.exception.ErrorCode.*;
+
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+@Transactional
 public class PostService {
 
     private final PostRepository postRepository;
@@ -49,7 +52,7 @@ public class PostService {
 
         //1. 사용자 정보 조회
         User user = userRepository.findById(userId)
-                .orElseThrow(()-> new RuntimeException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(()-> new BusinessException(MEMBER_NOT_FOUND));
 
         // 2. post 엔티티 생성 및 기본 정보 설정
         Post post = Post.builder()
@@ -84,9 +87,10 @@ public class PostService {
     }
 
     // 게시글 단건 조회(상세 페이지)
+    @Transactional
     public PostResponseDto getPost(Long postId) {
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 게시물을 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(POST_NOT_FOUND));
 
         // 조회수 증가 로직 호출
         increaseViewCount(post);
@@ -155,10 +159,10 @@ public class PostService {
     public void updatePost(Long postId, PostCreateRequestDto requestDto, Long userId) {
         // 1. 게시물 조회 및 수정 권한 확인
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 게시물을 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(POST_NOT_FOUND));
 
         if (!post.getUser().getId().equals(userId)) {
-            throw new RuntimeException("게시물을 수정할 권한이 없습니다.");
+            throw new BusinessException(ACCESS_DENIED);
         }
 
         // 2. 사용하지 않을 S3 파일 삭제
@@ -188,12 +192,12 @@ public class PostService {
     public void deletePost(Long postId, Long userId) throws AccessDeniedException {
         // 1. 게시물 조회
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 게시물을 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(POST_NOT_FOUND));
 
         // 2. 소유권 확인 (게시물 작성자 ID와 현재 사용자 ID 비교)
         if (!post.getUser().getId().equals(userId)) {
             // Admin 권한이 있다면 이 로직을 통과시키는 로직을 추가할 수도 있습니다.
-            throw new AccessDeniedException("게시물을 삭제할 권한이 없습니다.");
+            throw new BusinessException(ACCESS_DENIED);
         }
 
         // 3. s3에서 이미지 삭제
@@ -240,13 +244,13 @@ public class PostService {
     public void likePost(Long postId, Long userId) {
         // 1. 게시물과 사용자 정보를 조회합니다.
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 게시물을 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(POST_NOT_FOUND));
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(MEMBER_NOT_FOUND));
 
         // 2. 이미 해당 게시물에 좋아요를 눌렀는지 확인합니다.
         if (userLikePostsRepository.existsByUserAndPost(user, post)) {
-            throw new IllegalArgumentException("이미 좋아요를 누른 게시물입니다.");
+            throw new BusinessException(LIKE_DUPLICATION);
         }
 
         // 3. 좋아요 기록을 생성하고 저장합니다 (UserLikePosts).
@@ -262,13 +266,13 @@ public class PostService {
     public void unlikePost(Long postId, Long userId) {
         // 1. 게시물과 사용자 정보를 조회합니다.
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 게시물을 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(POST_NOT_FOUND));
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(MEMBER_NOT_FOUND));
 
         // 2. 사용자가 해당 게시물에 좋아요를 누른 기록을 조회합니다.
         UserLikePosts userLikePosts = userLikePostsRepository.findByUserAndPost(user, post)
-                .orElseThrow(() -> new IllegalArgumentException("좋아요를 누른 기록이 없습니다."));
+                .orElseThrow(() -> new BusinessException(UNLIKE_DUPLICATION));
 
         // 3. 좋아요 기록을 삭제합니다 (UserLikePosts).
         userLikePostsRepository.delete(userLikePosts);

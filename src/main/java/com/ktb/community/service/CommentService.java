@@ -6,6 +6,7 @@ import com.ktb.community.dto.response.CommentSliceResponseDto;
 import com.ktb.community.entity.Comment;
 import com.ktb.community.entity.Post;
 import com.ktb.community.entity.User;
+import com.ktb.community.exception.BusinessException;
 import com.ktb.community.repository.CommentRepository;
 import com.ktb.community.repository.PostRepository;
 import com.ktb.community.repository.UserRepository;
@@ -21,9 +22,11 @@ import java.nio.file.AccessDeniedException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.ktb.community.exception.ErrorCode.*;
+
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+@Transactional
 public class CommentService {
 
     private final CommentRepository commentRepository;
@@ -41,9 +44,9 @@ public class CommentService {
     @Transactional
     public CommentResponseDto createComment(Long postId, Long userId, CommentRequestDto dto) {
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("게시물을 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(POST_NOT_FOUND));
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(MEMBER_NOT_FOUND));
 
         Comment comment = new Comment(dto.getContents(), post, user);
         post.setCommentList(comment); // 연관관계 메서드
@@ -66,6 +69,7 @@ public class CommentService {
     }
 
     // 커서 기반 댓글 조회
+    @Transactional(readOnly = true)
     public CommentSliceResponseDto getCommentsByCursor(Long postId, Long lastCommentId) {
         Pageable pageable = PageRequest.of(0, PAGE_SIZE);
 
@@ -102,10 +106,10 @@ public class CommentService {
     @Transactional
     public void updateComment(Long commentId, Long userId, CommentRequestDto dto) {
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new IllegalArgumentException("댓글을 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(COMMENT_NOT_FOUND));
 
         if (!comment.getUser().getId().equals(userId)) {
-            throw new RuntimeException("댓글을 수정할 권한이 없습니다.");
+            throw new BusinessException(ACCESS_DENIED);
         }
 
         comment.update(dto.getContents());
@@ -115,10 +119,10 @@ public class CommentService {
     @Transactional
     public void deleteComment(Long commentId, Long userId) {
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new IllegalArgumentException("댓글을 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(COMMENT_NOT_FOUND));
 
         if (!comment.getUser().getId().equals(userId)) {
-            throw new RuntimeException("댓글을 삭제할 권한이 없습니다.");
+            throw new BusinessException(ACCESS_DENIED);
         }
 
         // 게시물의 댓글 수 1 감소

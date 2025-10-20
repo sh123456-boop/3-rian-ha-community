@@ -19,12 +19,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.ktb.community.exception.ErrorCode.MEMBER_NOT_FOUND;
-import static com.ktb.community.exception.ErrorCode.PASSWORD_MISMATCH;
+import static com.ktb.community.exception.ErrorCode.*;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+@Transactional
 public class UserService {
 
     private final UserRepository userRepository;
@@ -42,18 +41,19 @@ public class UserService {
     public void updateNickname(String nickname, Long userId) {
         // 1. 닉네임 중복 확인
         if (userRepository.existsByNickname(nickname)) {
-            throw new IllegalArgumentException("이미 사용 중인 닉네임입니다.");
+            throw new BusinessException(NICKNAME_DUPLICATION);
         }
 
         // 2. 사용자 정보 조회
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(MEMBER_NOT_FOUND));
 
         // 3. 닉네임 업데이트
         user.updateNickname(nickname);
     }
 
     // 회원 닉네임 중복 검사
+    @Transactional
     public boolean findNickname(String nickname) {
         if (userRepository.existsByNickname(nickname)) {
             return false;
@@ -106,7 +106,7 @@ public class UserService {
     public void updateProfileImage(Long userId, String s3Key) {
         // 1. 사용자 정보를 조회합니다.
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(MEMBER_NOT_FOUND));
 
         // 2. 기존 프로필 이미지가 있는지 확인합니다.
         Image oldImage = user.getImage();
@@ -128,7 +128,7 @@ public class UserService {
     public void deleteProfileImage(Long userId) {
         // 1. 사용자 정보를 조회
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(MEMBER_NOT_FOUND));
 
         // 2. 사용자의 현재 프로필 이미지를 확인
         Image profileImage = user.getImage();
@@ -149,10 +149,11 @@ public class UserService {
      * @return 게시물 ID의 List<Long>
      */
     // 단순 조회이므로 readOnly = true 옵션으로 성능 최적화
+    @Transactional(readOnly = true)
     public LikedPostsResponseDto getLikedPosts(Long userId) {
         // 1. 사용자 정보를 조회
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(MEMBER_NOT_FOUND));
 
         // 2. 해당 사용자의 '좋아요' 기록을 liked_at 최신순으로 조회
         List<UserLikePosts> likedPosts = userLikePostsRepository.findByUserOrderByLikedAtDesc(user);
@@ -166,9 +167,10 @@ public class UserService {
     }
 
     // 사용자 정보 페이지
+    @Transactional(readOnly = true)
     public UserInfoResponseDto getUserInfo(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("해당 ID의 사용자를 찾을 수 없습니다: "));
+                .orElseThrow(() -> new BusinessException(MEMBER_NOT_FOUND));
 
         // 작성자의 프로필 이미지 URL을 생성
         String authorProfileImageUrl;

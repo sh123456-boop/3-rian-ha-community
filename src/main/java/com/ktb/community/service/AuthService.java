@@ -23,12 +23,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 
-import static com.ktb.community.exception.ErrorCode.EMAIL_DUPLICATION;
-import static com.ktb.community.exception.ErrorCode.NICKNAME_DUPLICATION;
+import static com.ktb.community.exception.ErrorCode.*;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+@Transactional
 public class AuthService {
 
     private final UserRepository userRepository;
@@ -82,7 +81,7 @@ public class AuthService {
         }
 
         if (refresh == null) {
-            return new ResponseEntity<>("refresh token null", HttpStatus.BAD_REQUEST);
+            throw new BusinessException(UNAUTHORIZED_USER);
         }
 
         //expired check
@@ -91,7 +90,7 @@ public class AuthService {
         } catch (ExpiredJwtException e) {
 
             //response status code
-            return new ResponseEntity<>("refresh token expired", HttpStatus.BAD_REQUEST);
+            throw  new BusinessException(UNAUTHORIZED_USER);
         }
 
         // 토큰이 refresh인지 확인 (발급시 페이로드에 명시)
@@ -99,8 +98,7 @@ public class AuthService {
 
         if (!category.equals("refresh")) {
 
-            //response status code
-            return new ResponseEntity<>("invalid refresh token", HttpStatus.BAD_REQUEST);
+            throw new BusinessException(UNAUTHORIZED_USER);
         }
 
         Long Id = jwtUtil.getID(refresh);

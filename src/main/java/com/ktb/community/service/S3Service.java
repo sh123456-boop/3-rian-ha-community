@@ -1,6 +1,8 @@
 package com.ktb.community.service;
 
 import com.ktb.community.dto.response.PreSignedUrlResponseDto;
+import com.ktb.community.exception.BusinessException;
+import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -18,10 +20,12 @@ import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignReques
 import java.time.Duration;
 import java.util.UUID;
 
+import static com.ktb.community.exception.ErrorCode.INTERNAL_SERVER_ERROR;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Transactional(readOnly = true)
+@Transactional
 public class S3Service {
 
     private final S3Presigner s3Presigner;
@@ -76,7 +80,7 @@ public class S3Service {
             logger.info("S3에서 파일 삭제 성공: {}", s3Key);
 
         } catch (S3Exception e) {
-            throw new RuntimeException("\"S3 파일 삭제 실패: \" + s3Key, e");
+            throw new BusinessException(INTERNAL_SERVER_ERROR);
         }
     }
 
