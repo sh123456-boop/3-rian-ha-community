@@ -136,6 +136,32 @@ public class PostService {
                 ? postRepository.findSliceByOrderByIdDesc(pageable)
                 : postRepository.findSliceByIdLessThanOrderByIdDesc(lastPostId, pageable);
 
+        // 2. 스트림 내에서 DTO를 변환하며 프로필 이미지 URL을 생성
+        List<PostSummaryDto> posts = postSlice.getContent().stream()
+                .map(post -> {
+                    String profileImageUrl = null;
+                    // Fetch Join으로 데이터를 모두 가져왔으므로 추가 쿼리가 발생하지 않습니다.
+                    if (post.getUser() != null && post.getUser().getImage() != null) {
+                        profileImageUrl = "https://" + cloudfrontDomain + "/" + post.getUser().getImage().getS3Key();
+                    } else {
+                        profileImageUrl = "https://" + cloudfrontDomain + "/" + defaultProfileImageKey;
+                    }
+                    return new PostSummaryDto(post, profileImageUrl);
+                })
+                .collect(Collectors.toList());
+
+        return new PostSliceResponseDto(posts, postSlice.hasNext());
+    }
+
+    // 게시글 인기순 전체 조회(인피니티 스크롤)
+    @Transactional(readOnly = true)
+    public PostSliceResponseDto getPopularPostSlice(Long lastViewCount, Long lastPostId) {
+        Pageable pageable = PageRequest.of(0, PAGE_SIZE);
+
+        // 1. Fetch Join이 적용된 새로운 Repository 메서드를 호출
+        Slice<Post> postSlice = (lastPostId == null)
+                ? postRepository.findSliceByOrderByViewCountDesc(pageable)
+                : postRepository.findSliceByOrderByViewCountDesc(lastViewCount, lastPostId, pageable);
 
         // 2. 스트림 내에서 DTO를 변환하며 프로필 이미지 URL을 생성
         List<PostSummaryDto> posts = postSlice.getContent().stream()
@@ -153,6 +179,8 @@ public class PostService {
 
         return new PostSliceResponseDto(posts, postSlice.hasNext());
     }
+
+
 
     // 게시글 수정
     @Transactional

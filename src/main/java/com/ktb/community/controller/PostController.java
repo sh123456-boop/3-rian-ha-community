@@ -149,6 +149,15 @@ public class PostController {
         return ApiResponseDto.success(response);
     }
 
+    @GetMapping("v1/posts/popular")
+    public ApiResponseDto<PostSliceResponseDto> getPopularPostSlice(
+            @RequestParam(required = false) Long lastViewCount,
+            @RequestParam(required = false) Long lastPostId) {
+
+        PostSliceResponseDto response = postService.getPopularPostSlice(lastViewCount, lastPostId);
+        return ApiResponseDto.success(response);
+    }
+
     // 게시글삭제
     @Operation(
             summary = "게시글 삭제",
