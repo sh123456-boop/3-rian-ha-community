@@ -3,7 +3,7 @@ package com.ktb.community.controller;
 import com.ktb.community.dto.ApiResponseDto;
 import com.ktb.community.dto.request.JoinRequestDto;
 import com.ktb.community.dto.request.LoginRequestDto;
-import com.ktb.community.service.AuthService;
+import com.ktb.community.service.AuthServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -16,7 +16,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Auth API", description = "인증 도메인 API")
 public class AuthController {
 
-    private final AuthService authService;
+    private final AuthServiceImpl authService;
 
 
     // 회원가입

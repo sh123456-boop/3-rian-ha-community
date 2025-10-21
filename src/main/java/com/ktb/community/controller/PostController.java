@@ -2,11 +2,12 @@ package com.ktb.community.controller;
 
 import com.ktb.community.dto.ApiResponseDto;
 import com.ktb.community.dto.request.PostCreateRequestDto;
+import com.ktb.community.dto.response.PostTop5ResponseDto;
 import com.ktb.community.dto.response.PostResponseDto;
 import com.ktb.community.dto.response.PostSliceResponseDto;
-import com.ktb.community.service.CommentService;
+import com.ktb.community.service.CommentServiceImpl;
 import com.ktb.community.service.CustomUserDetails;
-import com.ktb.community.service.PostService;
+import com.ktb.community.service.PostServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -21,7 +22,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.net.URI;
 import java.nio.file.AccessDeniedException;
 
 @Tag(name = "Post API", description = "게시물 도메인 API")
@@ -29,9 +29,21 @@ import java.nio.file.AccessDeniedException;
 @RequiredArgsConstructor
 public class PostController {
 
-    private final PostService postService;
-    private final CommentService commentService;
+    private final PostServiceImpl postService;
+    private final CommentServiceImpl commentService;
 
+
+    @GetMapping("/v1/post-ranking/day")
+    public ApiResponseDto<PostTop5ResponseDto> getDailyTop5Post() {
+        PostTop5ResponseDto dailyTop5Posts = postService.getDailyTop5Posts();
+        return ApiResponseDto.success(dailyTop5Posts);
+    }
+
+    @GetMapping("/v1/post-ranking/week")
+    public ApiResponseDto<PostTop5ResponseDto> getWeeklyTop5Post() {
+        PostTop5ResponseDto weeklyTop5Posts = postService.getWeeklyTop5Posts();
+        return ApiResponseDto.success(weeklyTop5Posts);
+    }
 
     //게시글 작성
     @Operation(
@@ -313,5 +325,8 @@ public class PostController {
         // 성공 시 204 No Content 응답을 반환합니다.
         return ApiResponseDto.success("좋아요가 취소되었습니다.");
     }
+
+
+
 
 }

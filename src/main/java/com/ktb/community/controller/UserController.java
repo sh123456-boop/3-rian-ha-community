@@ -3,10 +3,9 @@ package com.ktb.community.controller;
 import com.ktb.community.dto.ApiResponseDto;
 import com.ktb.community.dto.request.*;
 import com.ktb.community.dto.response.LikedPostsResponseDto;
-import com.ktb.community.dto.response.PreSignedUrlResponseDto;
 import com.ktb.community.dto.response.UserInfoResponseDto;
 import com.ktb.community.service.CustomUserDetails;
-import com.ktb.community.service.UserService;
+import com.ktb.community.service.UserServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -15,7 +14,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 @Tag(name = "User API", description = "사용자 도메인 API")
@@ -23,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class UserController {
 
-    private final UserService userService;
+    private final UserServiceImpl userService;
 
     // 닉네임 수정
     @Operation(

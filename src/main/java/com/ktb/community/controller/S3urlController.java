@@ -4,7 +4,7 @@ import com.ktb.community.dto.ApiResponseDto;
 import com.ktb.community.dto.request.PreSignedUrlRequestDto;
 import com.ktb.community.dto.response.PreSignedUrlResponseDto;
 import com.ktb.community.service.CustomUserDetails;
-import com.ktb.community.service.S3Service;
+import com.ktb.community.service.S3ServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -13,7 +13,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -24,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class S3urlController {
 
-    private final S3Service s3Service;
+    private final S3ServiceImpl s3Service;
 
 
     @Operation(
