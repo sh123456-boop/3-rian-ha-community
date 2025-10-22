@@ -68,7 +68,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         String role = customUserDetails.getAuthorities().iterator().next().getAuthority();
 
         // 3. 토큰 생성
-        String access = jwtUtil.createJwt("access", userId, role, 3*600000L); //30분
+        String access = jwtUtil.createJwt("access", userId, role, 3*600000L); //30분 3*600000L  // 1분 60000L
         String refresh = jwtUtil.createJwt("refresh", userId, role, 3*86400000L); //3일
 
         // 4. Refresh 토큰 저장
@@ -100,7 +100,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         String errorMessage;
         // '해당 이메일은 등록되지 않았습니다' 예외는 InternalAuthenticationServiceException 으로 래핑됩니다.
         if (failed instanceof org.springframework.security.authentication.InternalAuthenticationServiceException) {
-            errorMessage = "등록되지 않은 이메일입니다.";
+            errorMessage = "로그인에 실패하였습니다.";
         } else if (failed instanceof org.springframework.security.authentication.BadCredentialsException) {
             errorMessage = "비밀번호가 일치하지 않습니다.";
         } else {

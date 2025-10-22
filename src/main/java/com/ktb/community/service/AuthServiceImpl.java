@@ -105,14 +105,14 @@ public class AuthServiceImpl implements AuthService{
         String role = jwtUtil.getRole(refresh);
 
         //make new JWT
-        String newAccess = jwtUtil.createJwt("access", Id, role, 3*600000L); //30분
+        String newAccess = jwtUtil.createJwt("access", Id, role, 3*600000L); //30분 : 3*600000L
         String newRefresh = jwtUtil.createJwt("refresh", Id, role, 3*86400000L); //3일
 
         // Refresh 토큰 저장, db에 기존의 refresh 토큰 삭제 후 새 refresh 토큰 저장
         refreshRepository.deleteByRefresh(refresh);
         addRefreshEntity( Id, newRefresh, 3*86400000L);
 
-        ResponseCookie cookie = ResponseCookie.from("refresh", refresh)
+        ResponseCookie cookie = ResponseCookie.from("refresh", newRefresh)
                 .path("/")
                 .maxAge(24 * 60 * 60 * 3)
                 .httpOnly(true)

@@ -30,6 +30,7 @@ public class Post extends Timestamped{
 
     @NotBlank
     @Column(nullable = false, columnDefinition = "TEXT")
+    @Size(max = 10000, message = "내용은 10000자를 초과할 수 없습니다.") // 10000자 제한
     private String contents;
 
     // Post(Many) to User(One) 관계

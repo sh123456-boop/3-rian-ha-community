@@ -10,12 +10,14 @@ public class JoinRequestDto {
 
     @NotBlank(message = "이메일은 필수 입력 값입니다.")
     @Email(message = "올바른 이메일 형식이 아닙니다.")
+    @Size(min = 6, max = 254)
     private String email;
 
     @NotBlank(message = "비밀번호는 필수 입력 값입니다.")
     @Size(min = 8, max = 20, message = "비밀번호는 8자 이상 20자 이하로 입력해주세요.")
     private String password;
 
+    @Size(min = 8, max = 20, message = "비밀번호는 8자 이상 20자 이하로 입력해주세요.")
     @NotBlank(message = "비밀번호를 다시 입력해주세요. ")
     private String rePassword;
 

@@ -48,4 +48,13 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "WHERE (c.view_cnt < :lastViewCount) OR (c.view_cnt = :lastViewCount AND p.id < :lastPostId) " + // 👈 페이지네이션 조건 수정
             "ORDER BY c.view_cnt DESC, p.id DESC") // 👈 postcount -> view_cnt, 2차 정렬 기준 추가
     Slice<Post> findSliceByOrderByViewCountDesc(@Param("lastViewCount") Long lastViewCount, @Param("lastPostId") Long lastPostId, Pageable pageable);
+
+
+    // ✅ N+1 테스트를 위한 새로운 메서드 (Fetch Join 없음)
+    @Query("SELECT p FROM Post p ORDER BY p.id DESC")
+    Slice<Post> findSliceWithoutFetchJoinOrderByIdDesc(Pageable pageable);
+
+    // @Query("SELECT p FROM Post p ORDER BY p.id DESC")
+
+
 }

@@ -28,11 +28,12 @@ public class User extends Timestamped{
 
     @NotBlank // null, 빈문자열, 공백 문자열 모두 허용하지 않음
     @Email // 이메일 형식 검증
+    @Size(min = 6, max = 254)
     @Column(nullable = false, unique = true) // DB 레벨에서 NOT NULL, UNIQUE 제약조건 추가
     private String email;
 
     @NotBlank
-    @Column(nullable = false)
+    @Column(nullable = false, length = 255)
     private String password;
 
     @NotBlank

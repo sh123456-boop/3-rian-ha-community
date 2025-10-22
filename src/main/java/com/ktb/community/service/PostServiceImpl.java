@@ -444,4 +444,20 @@ public class PostServiceImpl implements PostService{
         return posts;
     }
 
+
+    // ✅ N+1 문제 테스트를 위해 새로 추가한 메서드
+    @Transactional(readOnly = true)
+    public PostSliceResponseDto getPostSliceForNPlusOneTest(Long lastPostId) {
+        Pageable pageable = PageRequest.of(0, PAGE_SIZE);
+
+        // 여기서는 Fetch Join이 없는 테스트용 메서드를 호출
+        Slice<Post> postSlice = (lastPostId == null)
+                ? postRepository.findSliceWithoutFetchJoinOrderByIdDesc(pageable) // ✅ Fetch Join X
+                : postRepository.findSliceByIdLessThanOrderByIdDesc(lastPostId, pageable); // 이 부분도 필요하다면 N+1용으로 분리
+
+        // N+1 문제를 유발하는 DTO 변환 로직은 그대로 재사용
+        List<PostSummaryDto> posts = getPostSummaryDtos(postSlice.getContent());
+
+        return new PostSliceResponseDto(posts, postSlice.hasNext());
+    }
 }
