@@ -101,6 +101,12 @@ public class AuthServiceImpl implements AuthService{
             throw new BusinessException(UNAUTHORIZED_USER);
         }
 
+        // 토큰이 내 토큰 저장소에 등록된 토큰인지 확인
+        Boolean exists = refreshRepository.existsByRefresh(refresh);
+        if (!exists) {
+            throw new BusinessException(UNAUTHORIZED_USER);
+        }
+
         Long Id = jwtUtil.getID(refresh);
         String role = jwtUtil.getRole(refresh);
 

@@ -1,4 +1,4 @@
-package com.ktb.community.config;
+package com.ktb.community.controller;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
