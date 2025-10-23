@@ -1,0 +1,23 @@
+spring:
+  # H2 인메모리 DB 설정
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=MySQL # H2를 MySQL 모드로 실행
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  # JPA 및 Hibernate 설정
+  jpa:
+    hibernate:
+      ddl-auto: create-drop # 테스트 시작 시 테이블 생성, 종료 시 삭제
+    properties:
+      hibernate:
+        show_sql: true # 실행되는 SQL을 콘솔에 출력
+        format_sql: true # SQL을 보기 좋게 포맷팅
+        default_batch_fetch_size: 100 # IN 절 쿼리 최적화 (N+1 완화 옵션)
+
+# Hibernate가 실행하는 SQL 로그를 DEBUG 레벨로 자세히 보기
+logging:
+  level:
+    org.hibernate.SQL: debug
+    # org.hibernate.type.descriptor.sql: trace # SQL 파라미터 값까지 보려면 주석 해제
