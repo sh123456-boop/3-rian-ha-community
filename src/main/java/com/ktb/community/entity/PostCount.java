@@ -57,4 +57,8 @@ public class PostCount {
         this.cmt_cnt = Math.max(0, this.cmt_cnt - 1);
     }
 
+    public void decreaseCmtCount(int count) {
+        this.cmt_cnt = Math.max(0, this.cmt_cnt - count);
+    }
+
 }

@@ -110,6 +110,7 @@ public class PostServiceImpl implements PostService{
         zSetOperations.incrementScore(dailyKey, postId.toString(), 1);
         zSetOperations.incrementScore(weeklyKey, postId.toString(), 1);
 
+        // 이건 빼야 할듯 (게시글 조회할때마다 체크할 필요는 없음)
         if (redisTemplate.getExpire(dailyKey) < 0) {
             // 일일 키에 2일의 유효시간 설정
             redisTemplate.expire(dailyKey, 2, TimeUnit.DAYS);
@@ -132,7 +133,6 @@ public class PostServiceImpl implements PostService{
             authorProfileImageUrl = "https://" + cloudfrontDomain + "/" + defaultProfileImageKey;
         }
 
-
         // 1. 엔티티의 이미지 목록을 dto로 변환
         List<PostResponseDto.ImageInfo> imageInfos = post.getPostImageList().stream()
                 .map(postImage -> {
@@ -145,9 +145,6 @@ public class PostServiceImpl implements PostService{
 
         // 좋아요 누른 게시글인지 확인
         boolean likedByUser = userLikePostsRepository.existsByUserAndPost(author, post);
-
-
-
 
         // 3. 최종 응답 dto 반환
         return new PostResponseDto(post, imageInfos, authorProfileImageUrl, author.getId(), likedByUser);

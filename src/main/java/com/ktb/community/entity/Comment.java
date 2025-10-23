@@ -17,7 +17,7 @@ public class Comment extends Timestamped{
     private Long id;
 
     @Column(nullable = false)
-    @Size(max = 10000, message = "내용은 10000자를 초과할 수 없습니다.") // 1000자 제한
+    @Size(max = 1000, message = "내용은 1000자를 초과할 수 없습니다.") // 1000자 제한
     private String contents;
 
     @ManyToOne(fetch = FetchType.LAZY)

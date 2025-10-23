@@ -1,6 +1,7 @@
 package com.ktb.community.repository;
 
 import com.ktb.community.entity.Comment;
+import com.ktb.community.repository.projection.PostCommentCount;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -38,6 +39,17 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
             "ORDER BY c.id DESC")
     Slice<Comment> findSliceByPostIdAndIdLessThanOrderByIdDesc(@Param("postId") Long postId, @Param("lastCommentId") Long lastCommentId, Pageable pageable);
 
+
+    // 회원 탈퇴 시 탈퇴한 회원이 남긴 게시물 별 댓글 수 확인
+    @Query("""
+    select c.post.id as postId,
+           count(c.id) as commentCount
+    from Comment c
+    where c.user.id = :userId
+    group by c.post.id
+    order by c.post.id asc
+""")
+    List<PostCommentCount> findPostCommentCountsByUserId(@Param("userId") Long userId);
 
 
 }

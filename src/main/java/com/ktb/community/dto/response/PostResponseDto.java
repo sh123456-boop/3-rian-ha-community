@@ -17,6 +17,7 @@ public class PostResponseDto {
     private Instant updatedAt;
     private List<ImageInfo> images;// 이미지 정보 리스트를 내부에 포함
     private String authorProfileImageUrl;
+    //  작성자의 아이디를 통해 수정/삭제 버튼이 나옴.
     private Long userId;
     private boolean likedByUser;
 
@@ -50,6 +51,7 @@ public class PostResponseDto {
         this.likeCount = post.getPostCount().getLikes_cnt();
         this.commentCount = post.getPostCount().getCmt_cnt();
         this.authorProfileImageUrl = authorProfileImageUrl;
+
         this.userId = userId;
         this.likedByUser = likedByUser;
     }

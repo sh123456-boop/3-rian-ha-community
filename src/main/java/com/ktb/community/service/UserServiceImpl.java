@@ -3,12 +3,13 @@ package com.ktb.community.service;
 import com.ktb.community.dto.request.PasswordRequestDto;
 import com.ktb.community.dto.response.LikedPostsResponseDto;
 import com.ktb.community.dto.response.UserInfoResponseDto;
-import com.ktb.community.entity.Image;
-import com.ktb.community.entity.User;
-import com.ktb.community.entity.UserLikePosts;
+import com.ktb.community.entity.*;
 import com.ktb.community.exception.BusinessException;
+import com.ktb.community.repository.CommentRepository;
+import com.ktb.community.repository.PostRepository;
 import com.ktb.community.repository.UserLikePostsRepository;
 import com.ktb.community.repository.UserRepository;
+import com.ktb.community.repository.projection.PostCommentCount;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -26,6 +27,8 @@ import static com.ktb.community.exception.ErrorCode.*;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final CommentRepository commentRepository;
+    private final PostRepository postRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final S3ServiceImpl s3Service;
     private final UserLikePostsRepository userLikePostsRepository; // 리포지토리 주입
@@ -90,7 +93,16 @@ public class UserServiceImpl implements UserService {
             throw new BusinessException(PASSWORD_MISMATCH);
         }
 
-        // 3. 사용자 삭제
+        // 3. 사용자가 남긴 댓글 확인 후 post별로 댓글카운트 최신화
+        List<PostCommentCount> postCommentCount = commentRepository.findPostCommentCountsByUserId(userId);
+        for (PostCommentCount commentCount : postCommentCount) {
+            Long postId = commentCount.getPostId();
+            int comment_cnt = commentCount.getCommentCount();
+            Post post = postRepository.findById(postId).orElseThrow(() -> new BusinessException(POST_NOT_FOUND));
+            post.getPostCount().decreaseCmtCount(comment_cnt);
+        }
+
+        // 사용자 삭제
         userRepository.delete(user);
     }
 

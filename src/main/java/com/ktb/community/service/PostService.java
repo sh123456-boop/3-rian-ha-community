@@ -26,7 +26,6 @@ public interface PostService {
     // 게시글 삭제
     void deletePost(Long postId, Long userId) throws AccessDeniedException;
 
-
     // 게시글 좋아요 추가 메서드
     void likePost(Long postId, Long userId);
 
